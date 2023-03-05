@@ -1,0 +1,147 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Local API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3042/adapters",
+            "variables": {}
+        }
+    ],
+    "paths": {
+        "/report": {
+            "post": {
+                "tags": [
+                    "LocalAPI"
+                ],
+                "summary": "Post Dagora Document",
+                "operationId": "PostDagoraDocument",
+                "parameters": [
+                    {
+                        "name": "signature",
+                        "in": "header",
+                        "description": "Signature",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "source",
+                        "in": "header",
+                        "description": "Source",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "version",
+                        "in": "header",
+                        "description": "Version",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "onChainSignature",
+                        "in": "header",
+                        "description": "OnChainSignature",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "requestBody": {
+                    "description": "",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateDagoraDocumentRequest"
+                            },
+                            "example": {}
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "headers": {}
+                    }
+                },
+                "deprecated": false
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CreateDagoraDocumentRequest": {
+                "title": "CreateAmberReportRequest",
+                "required": [
+                    "chain"
+                ],
+                "type": "object",
+                "properties": {
+                    "signature": {
+                        "type": "string"
+                    },
+                    "signMessage": {
+                        "type": "string"
+                    },
+                    "chain": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "from": {
+                        "type": "number"
+                    },
+                    "time": {
+                        "type": "number"
+                    },
+                    "duration": {
+                        "type": "number"
+                    },
+                    "amountUSD": {
+                        "type": "number"
+                    },
+                    "token": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "amount": {
+                        "type": "number"
+                    },
+                    "tokenAddress": {
+                        "type": "string"
+                    },
+                    "nonce": {
+                        "type": "number"
+                    }
+                },
+                "example": {}
+            }
+        },
+        "securitySchemes": {
+            "httpBearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "security": [
+        {
+            "httpBearer": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "LocalAPI",
+            "description": ""
+        }
+    ]
+}

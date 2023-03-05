@@ -1,0 +1,1361 @@
+{
+  "version": "0.1.0",
+  "name": "dagora_solana",
+  "instructions": [
+    {
+      "name": "createPackage",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "packageAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tokenMint",
+          "type": "publicKey"
+        },
+        {
+          "name": "feeOwner",
+          "type": "publicKey"
+        },
+        {
+          "name": "marketFee",
+          "type": "u16"
+        },
+        {
+          "name": "claimFee",
+          "type": "u64"
+        },
+        {
+          "name": "royaltyFee",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "updatePackage",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "packageAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeOwner",
+          "type": "publicKey"
+        },
+        {
+          "name": "isActive",
+          "type": "bool"
+        },
+        {
+          "name": "marketFee",
+          "type": "u16"
+        },
+        {
+          "name": "claimFee",
+          "type": "u64"
+        },
+        {
+          "name": "royaltyFee",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "createBundle",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bundle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bundlePath",
+          "type": "bytes"
+        },
+        {
+          "name": "maxItem",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "depositItem",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bundle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bundleTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadataAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "nftMint",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "withdrawItem",
+      "accounts": [
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bundle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bundleAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ownerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bundleTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadataAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "nftMint",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
+      "name": "createAuction",
+      "accounts": [
+        {
+          "name": "seller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "packageAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bundle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "auctionAccountPath",
+          "type": "bytes"
+        },
+        {
+          "name": "packageToken",
+          "type": "publicKey"
+        },
+        {
+          "name": "startAmount",
+          "type": "u64"
+        },
+        {
+          "name": "buyImmediateAmount",
+          "type": "u64"
+        },
+        {
+          "name": "startTime",
+          "type": "u64"
+        },
+        {
+          "name": "endTime",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updateAuction",
+      "accounts": [
+        {
+          "name": "seller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bundle",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "startAmount",
+          "type": "u64"
+        },
+        {
+          "name": "buyImmediateAmount",
+          "type": "u64"
+        },
+        {
+          "name": "startTime",
+          "type": "u64"
+        },
+        {
+          "name": "endTime",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "placeABid",
+      "accounts": [
+        {
+          "name": "bidder",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "auctionAccount",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancelAuction",
+      "accounts": [
+        {
+          "name": "seller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bundle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "endBid",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "bidder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "packageAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bundle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bidderTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sellerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bundleTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeOwnerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "executeSell",
+      "accounts": [
+        {
+          "name": "seller",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "buyer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "packageAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rootAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "signatureReceipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sellerPackageTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerPackageTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeOwnerPackageTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sysvarProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "exchangeByTokens",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
+          "name": "exchangeByAmounts",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "exchangeIndex",
+          "type": "u8"
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "startTime",
+          "type": "u64"
+        },
+        {
+          "name": "expiredAt",
+          "type": "u64"
+        },
+        {
+          "name": "nftMint",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "executeBuy",
+      "accounts": [
+        {
+          "name": "buyer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "seller",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "packageAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rootAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "signatureReceipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sellerPackageTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerPackageTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeOwnerPackageTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sysvarProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "exchangeByTokens",
+          "type": {
+            "vec": "publicKey"
+          }
+        },
+        {
+          "name": "exchangeByAmounts",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "exchangeIndex",
+          "type": "u8"
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "startTime",
+          "type": "u64"
+        },
+        {
+          "name": "expiredAt",
+          "type": "u64"
+        },
+        {
+          "name": "nftMint",
+          "type": {
+            "option": "publicKey"
+          }
+        },
+        {
+          "name": "reserve",
+          "type": "publicKey"
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancelSignature",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "signatureReceipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sysvarProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          }
+        },
+        {
+          "name": "signMessage",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "accounts": [
+        {
+          "name": "root",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rootAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "fromTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "toTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PackageInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "feeOwner",
+            "type": "publicKey"
+          },
+          {
+            "name": "isActive",
+            "type": "bool"
+          },
+          {
+            "name": "marketFee",
+            "type": "u16"
+          },
+          {
+            "name": "claimFee",
+            "type": "u64"
+          },
+          {
+            "name": "royaltyFee",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BundleInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "nftMints",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": "BundleStatus"
+            }
+          },
+          {
+            "name": "totalRoyaltyFee",
+            "type": "u64"
+          },
+          {
+            "name": "soldByPackage",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AuctionInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bundle",
+            "type": "publicKey"
+          },
+          {
+            "name": "packageToken",
+            "type": "publicKey"
+          },
+          {
+            "name": "buyImmediateAmount",
+            "type": "u64"
+          },
+          {
+            "name": "startTime",
+            "type": "u64"
+          },
+          {
+            "name": "endTime",
+            "type": "u64"
+          },
+          {
+            "name": "highestBidder",
+            "type": "publicKey"
+          },
+          {
+            "name": "highestBidAmount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidInfo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "bidder",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "isMatch",
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "TransferTokenParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "instruction",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidMessage",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auction",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NftListHashParam",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nftMints",
+            "type": {
+              "vec": "publicKey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExchangeMessage",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "nftHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "exchangeByTokens",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "exchangeByAmounts",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "startTime",
+            "type": "u64"
+          },
+          {
+            "name": "expiredAt",
+            "type": "u64"
+          },
+          {
+            "name": "reserve",
+            "type": "publicKey"
+          },
+          {
+            "name": "message",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BundleStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Create"
+          },
+          {
+            "name": "OnAuction"
+          },
+          {
+            "name": "Sold"
+          }
+        ]
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "CreatePackageEvent",
+      "fields": [
+        {
+          "name": "package",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "tokenMint",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "feeOwner",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "marketFee",
+          "type": "u16",
+          "index": false
+        },
+        {
+          "name": "claimFee",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "royaltyFee",
+          "type": "u16",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "UpdatePackageEvent",
+      "fields": [
+        {
+          "name": "package",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "feeOwner",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "isActive",
+          "type": "bool",
+          "index": false
+        },
+        {
+          "name": "marketFee",
+          "type": "u16",
+          "index": false
+        },
+        {
+          "name": "claimFee",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "royaltyFee",
+          "type": "u16",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "CreateBundleEvent",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "bundle",
+          "type": "publicKey",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "DepositItemEvent",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "bundle",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "nftMint",
+          "type": "publicKey",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "WithdrawItemEvent",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "bundle",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "nftMint",
+          "type": "publicKey",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "CreateAuctionEvent",
+      "fields": [
+        {
+          "name": "auction",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "bundle",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "packageToken",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "startAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "buyImmediateAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "startTime",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "endTime",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "UpdateAuctionEvent",
+      "fields": [
+        {
+          "name": "auction",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "startAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "buyImmediateAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "startTime",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "endTime",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "CancelAuctionEvent",
+      "fields": [
+        {
+          "name": "auction",
+          "type": "publicKey",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "EndBidEvent",
+      "fields": [
+        {
+          "name": "auction",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "winner",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "amount",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "ExchangeEvent",
+      "fields": [
+        {
+          "name": "buyer",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "seller",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "exchangeToken",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "exchangeAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "signature",
+          "type": {
+            "array": [
+              "u8",
+              64
+            ]
+          },
+          "index": false
+        },
+        {
+          "name": "nftHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          },
+          "index": false
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidRoot",
+      "msg": "DAgora Marketplace: Invalid Root"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidAccountOwner",
+      "msg": "DAgora Marketplace: Invalid Account Owner"
+    },
+    {
+      "code": 6002,
+      "name": "UninitializedAccount",
+      "msg": "DAgora Marketplace: Uninitialized Account"
+    },
+    {
+      "code": 6003,
+      "name": "PublicKeyMismatch",
+      "msg": "DAgora Marketplace: Public key Mismatch"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidBundleOwner",
+      "msg": "DAgora Marketplace: Invalid Bundle Owner"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidBundleStatus",
+      "msg": "DAgora Marketplace: Invalid Bundle Status"
+    },
+    {
+      "code": 6006,
+      "name": "BundleDoesNotContainsNFT",
+      "msg": "DAgora Marketplace: Bundle Does Not Contains NFT"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidPackage",
+      "msg": "DAgora Marketplace: Invalid Package"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidBundleOnAuction",
+      "msg": "DAgora Marketplace: Invalid Bundle On Auction"
+    },
+    {
+      "code": 6009,
+      "name": "ReachFeeCap",
+      "msg": "DAgora Marketplace: Reach Fee Cap"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidBundlePackageTokenAccount",
+      "msg": "DAgora Marketplace: Invalid Bundle Package Token Account"
+    },
+    {
+      "code": 6011,
+      "name": "AuctionHasAlreadyRun",
+      "msg": "DAgora Marketplace: Auction Has Already Run"
+    },
+    {
+      "code": 6012,
+      "name": "AuctionDoesNotEnd",
+      "msg": "DAgora Marketplace: Auction Dost Not End"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidInputTime",
+      "msg": "DAgora Marketplace: Invalid Input Time"
+    },
+    {
+      "code": 6014,
+      "name": "AuctionHasNotStartedYet",
+      "msg": "DAgora Marketplace: Auction Has Not Started Yet"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidED25519Instruction",
+      "msg": "DAgora Marketplace: Invalid ED25519 Instruction"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidED25519Data",
+      "msg": "DAgora Marketplace: Invalid ED25519 Data"
+    },
+    {
+      "code": 6017,
+      "name": "SignatureOutdated",
+      "msg": "DAgora Marketplace: Signature Outdated"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidReserve",
+      "msg": "DAgora Marketplace: Invalid Reserve"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidSellerNFTTokenAccount",
+      "msg": "DAgora Marketplace: Invalid Seller NFT Token Account"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidBuyerNFTTokenAccount",
+      "msg": "DAgora Marketplace: Invalid Buyer NFT Token Account"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidMetadataAccount",
+      "msg": "DAgora Marketplace: Invalid Metadata Account"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidBundleAccount",
+      "msg": "DAgora Marketplace: Invalid Bundle Account"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidBidderTokenAccount",
+      "msg": "DAgora Marketplace: Invalid Bidder Token Account"
+    },
+    {
+      "code": 6024,
+      "name": "FailToUnpackData",
+      "msg": "DAgora Marketplace: Fail To Unpack Data"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidBidAmount",
+      "msg": "DAgora Marketplace: Invalid Bid Amount"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidBidderAccount",
+      "msg": "DAgora Marketplace: Invalid Bidder Account"
+    }
+  ],
+  "metadata": {
+    "address": "GbxbAey4BhU3qmvivfCd33zwqfpnWrD6Jvi6eEGLL2iE"
+  }
+}
