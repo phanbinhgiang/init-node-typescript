@@ -8,18 +8,20 @@ import User from '../../model/user/User';
 import KYCVerify from '../../model/user/KYCVerify';
 import IPUser from '../../model/user/IPUser';
 import DeviceSource from '../../model/DeviceSource/DeviceSource';
-import { getQueryTimeArray } from '../function/index';
+import { getMatchTime, getQueryTimeArray } from '../function/index';
+import AddressList from '../../model/addressList/AddressList';
 
 export default class AnalyticSupperAppWorker {
+  // DashBoard
   static async getTotalDashboardData(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = 1656954000000;
+    const time = new Date().getTime();
     const to = moment(time);
     const from = moment(time).subtract(14, 'day');
     const dashboardData14days: any = await DashboardData.find({
       interval: 'day',
       startAt: {
-        $gt: new Date(from.valueOf()),
-        $lte: new Date(to.valueOf()),
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
       },
     }, {
       _id: 0,
@@ -55,6 +57,8 @@ export default class AnalyticSupperAppWorker {
         total: getData('swapVolume').total,
         percent: getData('swapVolume').percent,
       },
+
+      // revenue : ....
       Revenue: {
         total: 0,
         percent: 0,
@@ -67,7 +71,7 @@ export default class AnalyticSupperAppWorker {
   }
 
   static async getChartDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = 1656954000000;
+    const time = new Date().getTime();
     const { type, chart } = req.query;
     const to = moment(time);
     let from;
@@ -77,22 +81,22 @@ export default class AnalyticSupperAppWorker {
       case 'month':
         from = moment(time).subtract(1, 'month');
         matchTime = {
-          $gt: new Date(from.valueOf()),
-          $lte: new Date(to.valueOf()),
+          $gte: new Date(from.valueOf()),
+          $lt: new Date(to.valueOf()),
         };
         break;
 
       case 'all':
         matchTime = {
-          $lte: new Date(to.valueOf()),
+          $lt: new Date(to.valueOf()),
         };
         break;
 
       default:
         from = moment(time).subtract(7, 'day');
         matchTime = {
-          $gt: new Date(from.valueOf()),
-          $lte: new Date(to.valueOf()),
+          $gte: new Date(from.valueOf()),
+          $lt: new Date(to.valueOf()),
         };
         break;
     }
@@ -140,48 +144,11 @@ export default class AnalyticSupperAppWorker {
     next();
   }
 
-  static getMatchTime(type, time) {
-    const to = moment(time);
-    let from;
-    let matchTime;
-    switch (type) {
-      case 'week':
-        from = moment(time).subtract(7, 'day');
-        matchTime = {
-          $gt: new Date(from.valueOf()),
-          $lte: new Date(to.valueOf()),
-        };
-        break;
-
-      case 'month':
-        from = moment(time).subtract(1, 'month');
-        matchTime = {
-          $gt: new Date(from.valueOf()),
-          $lte: new Date(to.valueOf()),
-        };
-        break;
-
-      case 'all':
-        matchTime = {
-          $lte: new Date(to.valueOf()),
-        };
-        break;
-
-      default:
-        from = moment(time).subtract(1, 'day');
-        matchTime = {
-          $gt: new Date(from.valueOf()),
-          $lte: new Date(to.valueOf()),
-        };
-        break;
-    }
-    return matchTime;
-  }
-
+  // User
   static async getUserDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = 1656954000000;
+    const time = new Date().getTime();
     const { type } = req.query;
-    const matchTime = AnalyticSupperAppWorker.getMatchTime(type, time);
+    const matchTime = getMatchTime(type, time);
     const userDataTotalPromise = User.countDocuments({
       createdAt: matchTime,
     }).lean();
@@ -203,7 +170,7 @@ export default class AnalyticSupperAppWorker {
   static async getPopularCountries(req: RequestCustom, res: Response, next: NextFunction) {
     const time = new Date().getTime();
     const { type } = req.query;
-    const matchTime = AnalyticSupperAppWorker.getMatchTime(type, time);
+    const matchTime = getMatchTime(type, time);
     const dataCountries = await IPUser.aggregate([
       {
         $match: {
@@ -274,14 +241,69 @@ export default class AnalyticSupperAppWorker {
 
     const dataResponse = arrQueryTime.map((item) => ({
       time: item.start,
-      type,
       ios: getTotalData(item.start, item.end, 'ios'),
       android: getTotalData(item.start, item.end, 'android'),
     }));
 
+    req.response = dataResponse;
+    next();
+  }
+
+  // Wallet
+  static async getWalletDashboard(req: RequestCustom, res: Response, next: NextFunction) {
+    // return: wallet User( total, percent), total wallet created (total, percent), total wallet, total transfer volume, total transfer transaction
+    const time = new Date().getTime();
+    const to = moment(time);
+    const from = moment(time).subtract(14, 'day');
+
+    const dashboardData14daysPromise: any = DashboardData.find({
+      interval: 'day',
+      startAt: {
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
+      },
+    }, {
+      _id: 0,
+      addressNew: 1,
+      addressTotal: 1,
+      transactionVolumeTotal: 1,
+      transactionCountTotal: 1,
+      startAt: 1,
+    }).sort({ startAt: -1 }).lean();
+
+    const addressData7daysPromise: any = AddressList.find({
+      createdAt: {
+        $gte: new Date(moment(time).subtract(7, 'day').valueOf()),
+        $lt: new Date(to.valueOf()),
+      },
+    }, { _id: 0, createdAt: 1, createdUser: 1 }).sort({ createdAt: -1 }).lean();
+
+    const addressData7daysBeforePromise: any = AddressList.find({
+      createdAt: {
+        $gt: new Date(moment(time).subtract(14, 'day').valueOf()),
+        $lt: new Date(moment(time).subtract(7, 'day').valueOf()),
+      },
+    }, { _id: 0, createdAt: 1, createdUser: 1 }).sort({ createdAt: -1 }).lean();
+
+    const [dashboardData14days, addressData7days, addressData7daysBefore] = await Promise.all([dashboardData14daysPromise, addressData7daysPromise, addressData7daysBeforePromise]);
+
+    const totalWalletCreated7days = dashboardData14days.slice(0, 7).reduce((total, item) => total + item.addressNew, 0);
+    const totalWalletCreated7daysBefore = dashboardData14days.slice(7).reduce((total, item) => total + item.addressNew, 0);
+    const totalWalletUsers7days = addressData7days.map((item) => item.createdUser).flat().filter((value, index, self) => self.indexOf(value) === index);
+    const totalWalletUsers7daysBefore = addressData7daysBefore.map((item) => item.createdUser).flat().filter((value, index, self) => self.indexOf(value) === index);
+
     req.response = {
-      arrQueryTime: arrQueryTime.length,
-      dataResponse,
+      walletUser: {
+        total: totalWalletUsers7days.length,
+        percent: totalWalletUsers7daysBefore.length ? ((totalWalletUsers7days.length - totalWalletUsers7daysBefore.length) / totalWalletUsers7daysBefore.length) * 100 : 0,
+      },
+      totalWalletCreated: {
+        total: totalWalletCreated7days,
+        percent: totalWalletCreated7daysBefore ? ((totalWalletCreated7days - totalWalletCreated7daysBefore) / totalWalletCreated7daysBefore) * 100 : 0,
+      },
+      totalWallet: dashboardData14days.length ? dashboardData14days[0].addressTotal : 0,
+      totalTransferVolume: dashboardData14days.length ? dashboardData14days[0].transactionVolumeTotal : 0,
+      totalTransferTransaction: dashboardData14days.length ? dashboardData14days[0].transactionCountTotal : 0,
     };
     next();
   }

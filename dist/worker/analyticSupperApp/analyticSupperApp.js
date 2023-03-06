@@ -19,18 +19,20 @@ const KYCVerify_1 = __importDefault(require("../../model/user/KYCVerify"));
 const IPUser_1 = __importDefault(require("../../model/user/IPUser"));
 const DeviceSource_1 = __importDefault(require("../../model/DeviceSource/DeviceSource"));
 const index_1 = require("../function/index");
+const AddressList_1 = __importDefault(require("../../model/addressList/AddressList"));
 class AnalyticSupperAppWorker {
+    // DashBoard
     static getTotalDashboardData(req, res, next) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
-            const time = 1656954000000;
+            const time = new Date().getTime();
             const to = (0, moment_1.default)(time);
             const from = (0, moment_1.default)(time).subtract(14, 'day');
             const dashboardData14days = yield DashboardData_1.default.find({
                 interval: 'day',
                 startAt: {
-                    $gt: new Date(from.valueOf()),
-                    $lte: new Date(to.valueOf()),
+                    $gte: new Date(from.valueOf()),
+                    $lt: new Date(to.valueOf()),
                 },
             }, {
                 _id: 0,
@@ -64,6 +66,7 @@ class AnalyticSupperAppWorker {
                     total: getData('swapVolume').total,
                     percent: getData('swapVolume').percent,
                 },
+                // revenue : ....
                 Revenue: {
                     total: 0,
                     percent: 0,
@@ -77,7 +80,7 @@ class AnalyticSupperAppWorker {
     }
     static getChartDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = 1656954000000;
+            const time = new Date('2022-07-23 17:00:00.000Z').getTime();
             const { type, chart } = req.query;
             const to = (0, moment_1.default)(time);
             let from;
@@ -86,20 +89,20 @@ class AnalyticSupperAppWorker {
                 case 'month':
                     from = (0, moment_1.default)(time).subtract(1, 'month');
                     matchTime = {
-                        $gt: new Date(from.valueOf()),
-                        $lte: new Date(to.valueOf()),
+                        $gte: new Date(from.valueOf()),
+                        $lt: new Date(to.valueOf()),
                     };
                     break;
                 case 'all':
                     matchTime = {
-                        $lte: new Date(to.valueOf()),
+                        $lt: new Date(to.valueOf()),
                     };
                     break;
                 default:
                     from = (0, moment_1.default)(time).subtract(7, 'day');
                     matchTime = {
-                        $gt: new Date(from.valueOf()),
-                        $lte: new Date(to.valueOf()),
+                        $gte: new Date(from.valueOf()),
+                        $lt: new Date(to.valueOf()),
                     };
                     break;
             }
@@ -142,45 +145,12 @@ class AnalyticSupperAppWorker {
             next();
         });
     }
-    static getMatchTime(type, time) {
-        const to = (0, moment_1.default)(time);
-        let from;
-        let matchTime;
-        switch (type) {
-            case 'week':
-                from = (0, moment_1.default)(time).subtract(7, 'day');
-                matchTime = {
-                    $gt: new Date(from.valueOf()),
-                    $lte: new Date(to.valueOf()),
-                };
-                break;
-            case 'month':
-                from = (0, moment_1.default)(time).subtract(1, 'month');
-                matchTime = {
-                    $gt: new Date(from.valueOf()),
-                    $lte: new Date(to.valueOf()),
-                };
-                break;
-            case 'all':
-                matchTime = {
-                    $lte: new Date(to.valueOf()),
-                };
-                break;
-            default:
-                from = (0, moment_1.default)(time).subtract(1, 'day');
-                matchTime = {
-                    $gt: new Date(from.valueOf()),
-                    $lte: new Date(to.valueOf()),
-                };
-                break;
-        }
-        return matchTime;
-    }
+    // User
     static getUserDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = 1656954000000;
+            const time = new Date().getTime();
             const { type } = req.query;
-            const matchTime = AnalyticSupperAppWorker.getMatchTime(type, time);
+            const matchTime = (0, index_1.getMatchTime)(type, time);
             const userDataTotalPromise = User_1.default.countDocuments({
                 createdAt: matchTime,
             }).lean();
@@ -201,7 +171,7 @@ class AnalyticSupperAppWorker {
         return __awaiter(this, void 0, void 0, function* () {
             const time = new Date().getTime();
             const { type } = req.query;
-            const matchTime = AnalyticSupperAppWorker.getMatchTime(type, time);
+            const matchTime = (0, index_1.getMatchTime)(type, time);
             const dataCountries = yield IPUser_1.default.aggregate([
                 {
                     $match: {
@@ -260,13 +230,63 @@ class AnalyticSupperAppWorker {
             const getTotalData = (start, end, os) => deviceSourceData.filter((item) => item.createdAt >= start && item.createdAt <= end && item.os === os).length;
             const dataResponse = arrQueryTime.map((item) => ({
                 time: item.start,
-                type,
                 ios: getTotalData(item.start, item.end, 'ios'),
                 android: getTotalData(item.start, item.end, 'android'),
             }));
+            req.response = dataResponse;
+            next();
+        });
+    }
+    // Wallet
+    static getWalletDashboard(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // return: wallet User( total, percent), total wallet created (total, percent), total wallet, total transfer volume, total transfer transaction
+            const time = new Date().getTime();
+            const to = (0, moment_1.default)(time);
+            const from = (0, moment_1.default)(time).subtract(14, 'day');
+            const dashboardData14daysPromise = DashboardData_1.default.find({
+                interval: 'day',
+                startAt: {
+                    $gte: new Date(from.valueOf()),
+                    $lt: new Date(to.valueOf()),
+                },
+            }, {
+                _id: 0,
+                addressNew: 1,
+                addressTotal: 1,
+                transactionVolumeTotal: 1,
+                transactionCountTotal: 1,
+                startAt: 1,
+            }).sort({ startAt: -1 }).lean();
+            const addressData7daysPromise = AddressList_1.default.find({
+                createdAt: {
+                    $gte: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                    $lt: new Date(to.valueOf()),
+                },
+            }, { _id: 0, createdAt: 1, createdUser: 1 }).sort({ createdAt: -1 }).lean();
+            const addressData7daysBeforePromise = AddressList_1.default.find({
+                createdAt: {
+                    $gt: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
+                    $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                },
+            }, { _id: 0, createdAt: 1, createdUser: 1 }).sort({ createdAt: -1 }).lean();
+            const [dashboardData14days, addressData7days, addressData7daysBefore] = yield Promise.all([dashboardData14daysPromise, addressData7daysPromise, addressData7daysBeforePromise]);
+            const totalWalletCreated7days = dashboardData14days.slice(0, 7).reduce((total, item) => total + item.addressNew, 0);
+            const totalWalletCreated7daysBefore = dashboardData14days.slice(7).reduce((total, item) => total + item.addressNew, 0);
+            const totalWalletUsers7days = addressData7days.map((item) => item.createdUser).flat().filter((value, index, self) => self.indexOf(value) === index);
+            const totalWalletUsers7daysBefore = addressData7daysBefore.map((item) => item.createdUser).flat().filter((value, index, self) => self.indexOf(value) === index);
             req.response = {
-                arrQueryTime: arrQueryTime.length,
-                dataResponse,
+                walletUser: {
+                    total: totalWalletUsers7days.length,
+                    percent: totalWalletUsers7daysBefore.length ? ((totalWalletUsers7days.length - totalWalletUsers7daysBefore.length) / totalWalletUsers7daysBefore.length) * 100 : 0,
+                },
+                totalWalletCreated: {
+                    total: totalWalletCreated7days,
+                    percent: totalWalletCreated7daysBefore ? ((totalWalletCreated7days - totalWalletCreated7daysBefore) / totalWalletCreated7daysBefore) * 100 : 0,
+                },
+                totalWallet: dashboardData14days.length ? dashboardData14days[0].addressTotal : 0,
+                totalTransferVolume: dashboardData14days.length ? dashboardData14days[0].transactionVolumeTotal : 0,
+                totalTransferTransaction: dashboardData14days.length ? dashboardData14days[0].transactionCountTotal : 0,
             };
             next();
         });

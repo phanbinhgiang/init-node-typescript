@@ -6,10 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const analyticSupperApp_1 = __importDefault(require("../../worker/analyticSupperApp/analyticSupperApp"));
 const router = express_1.default.Router();
+// dashboard
 router.use('/app', analyticSupperApp_1.default.getTotalDashboardData);
 router.use('/app/chart', analyticSupperApp_1.default.getChartDashboard);
+// user
 router.use('/app/user', analyticSupperApp_1.default.getUserDashboard);
-router.use('/app/country', analyticSupperApp_1.default.getPopularCountries);
-router.use('/app/device', analyticSupperApp_1.default.getDeviceDashboard);
+router.use('/app/user/country', analyticSupperApp_1.default.getPopularCountries);
+router.use('/app/user/device', analyticSupperApp_1.default.getDeviceDashboard);
+// wallet
+router.use('/app/wallet', analyticSupperApp_1.default.getWalletDashboard);
 exports.default = router;
 //# sourceMappingURL=index.js.map

@@ -81,6 +81,44 @@ export const getQueryTimeArray = (from: string, to: string, type: any) => {
   return arrQueryTime;
 };
 
+export const getMatchTime = (type, time) => {
+  const to = moment(time);
+  let from;
+  let matchTime;
+  switch (type) {
+    case 'week':
+      from = moment(time).subtract(7, 'day');
+      matchTime = {
+        $gt: new Date(from.valueOf()),
+        $lte: new Date(to.valueOf()),
+      };
+      break;
+
+    case 'month':
+      from = moment(time).subtract(1, 'month');
+      matchTime = {
+        $gt: new Date(from.valueOf()),
+        $lte: new Date(to.valueOf()),
+      };
+      break;
+
+    case 'all':
+      matchTime = {
+        $lte: new Date(to.valueOf()),
+      };
+      break;
+
+    default:
+      from = moment(time).subtract(1, 'day');
+      matchTime = {
+        $gt: new Date(from.valueOf()),
+        $lte: new Date(to.valueOf()),
+      };
+      break;
+  }
+  return matchTime;
+};
+
 export const updateCacheRedislocal = async (key, func, currentTime) => {
   const payload = await func();
   saveStorage(key, JSON.stringify({ data: payload, time: currentTime }));
