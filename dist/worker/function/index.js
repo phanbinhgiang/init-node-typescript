@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchCacheRedis = exports.fetchCacheRedisLocal = exports.updateCacheRedislocal = exports.getMatchTime = exports.getQueryTimeArray = exports.saveStorage = exports.getStorage = exports.deleteStore = exports.onlyUnique = exports.createSlug = exports.genSkipNum = exports.getLength = exports.genUpdate = void 0;
+exports.fetchCacheRedis = exports.fetchCacheRedisLocal = exports.updateCacheRedislocal = exports.getFiledDataDashboardResponse = exports.getQueryChart = exports.getMatchTime = exports.getQueryTimeArray = exports.saveStorage = exports.getStorage = exports.deleteStore = exports.onlyUnique = exports.createSlug = exports.genSkipNum = exports.getLength = exports.genUpdate = void 0;
 /* eslint-disable max-len */
 /* eslint-disable consistent-return */
 /* eslint-disable default-param-last */
@@ -129,6 +129,100 @@ const getMatchTime = (type, time) => {
     return matchTime;
 };
 exports.getMatchTime = getMatchTime;
+const getQueryChart = (type, time) => {
+    const to = (0, moment_1.default)(time);
+    let from;
+    let matchTime;
+    let interval;
+    switch (type) {
+        case 'month':
+            interval = 'day';
+            from = (0, moment_1.default)(time).subtract(1, 'month');
+            matchTime = {
+                $gte: new Date(from.valueOf()),
+                $lt: new Date(to.valueOf()),
+            };
+            break;
+        case 'all':
+            interval = 'month';
+            matchTime = {
+                $lt: new Date(to.valueOf()),
+            };
+            break;
+        default:
+            interval = 'day';
+            from = (0, moment_1.default)(time).subtract(7, 'day');
+            matchTime = {
+                $gte: new Date(from.valueOf()),
+                $lt: new Date(to.valueOf()),
+            };
+            break;
+    }
+    return { matchTime, interval };
+};
+exports.getQueryChart = getQueryChart;
+const getFiledDataDashboardResponse = (chart) => {
+    let dataResponse;
+    switch (chart) {
+        // chart dashboard
+        case 'user':
+            dataResponse = {
+                _id: 0,
+                userTotal: 1,
+                userActive: 1,
+                userNew: 1,
+                startAt: 1,
+            };
+            break;
+        case 'address':
+            dataResponse = {
+                _id: 0,
+                addressTotal: 1,
+                addressActive: 1,
+                addressNew: 1,
+                startAt: 1,
+            };
+            break;
+        case 'xpoint':
+            dataResponse = {
+                _id: 0,
+                pointNew: 1,
+                pointTotal: 1,
+                startAt: 1,
+            };
+            break;
+        // chart wallet
+        case 'newWallet':
+            dataResponse = {
+                _id: 0,
+                addressNew: 1,
+                startAt: 1,
+            };
+            break;
+        case 'transferVolume':
+            dataResponse = {
+                _id: 0,
+                transactionVolume: 1,
+                transactionVolumeTotal: 1,
+                transactionVolumeSummary: 1,
+                startAt: 1,
+            };
+            break;
+        case 'transferTransaction':
+            dataResponse = {
+                _id: 0,
+                transactionCount: 1,
+                transactionCountTotal: 1,
+                transactionCountSummary: 1,
+                startAt: 1,
+            };
+            break;
+        default:
+            break;
+    }
+    return dataResponse;
+};
+exports.getFiledDataDashboardResponse = getFiledDataDashboardResponse;
 const updateCacheRedislocal = (key, func, currentTime) => __awaiter(void 0, void 0, void 0, function* () {
     const payload = yield func();
     (0, exports.saveStorage)(key, JSON.stringify({ data: payload, time: currentTime }));

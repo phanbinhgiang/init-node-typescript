@@ -80,65 +80,12 @@ class AnalyticSupperAppWorker {
     }
     static getChartDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date('2022-07-23 17:00:00.000Z').getTime();
+            const time = new Date().getTime();
             const { type, chart } = req.query;
-            const to = (0, moment_1.default)(time);
-            let from;
-            let matchTime;
-            switch (type) {
-                case 'month':
-                    from = (0, moment_1.default)(time).subtract(1, 'month');
-                    matchTime = {
-                        $gte: new Date(from.valueOf()),
-                        $lt: new Date(to.valueOf()),
-                    };
-                    break;
-                case 'all':
-                    matchTime = {
-                        $lt: new Date(to.valueOf()),
-                    };
-                    break;
-                default:
-                    from = (0, moment_1.default)(time).subtract(7, 'day');
-                    matchTime = {
-                        $gte: new Date(from.valueOf()),
-                        $lt: new Date(to.valueOf()),
-                    };
-                    break;
-            }
-            let dataResponse;
-            switch (chart) {
-                case 'user':
-                    dataResponse = {
-                        _id: 0,
-                        userTotal: 1,
-                        userActive: 1,
-                        userNew: 1,
-                        startAt: 1,
-                    };
-                    break;
-                case 'address':
-                    dataResponse = {
-                        _id: 0,
-                        addressTotal: 1,
-                        addressActive: 1,
-                        addressNew: 1,
-                        startAt: 1,
-                    };
-                    break;
-                case 'xpoint':
-                    dataResponse = {
-                        _id: 0,
-                        pointNew: 1,
-                        pointTotal: 1,
-                        startAt: 1,
-                    };
-                    break;
-                default:
-                    break;
-            }
+            const { matchTime, interval } = (0, index_1.getQueryChart)(type, time);
+            const dataResponse = (0, index_1.getFiledDataDashboardResponse)(chart);
             const dashboardData = yield DashboardData_1.default.find({
-                interval: 'day',
+                interval,
                 startAt: matchTime,
             }, dataResponse).sort({ startAt: 1 }).lean();
             req.response = dashboardData;
@@ -287,6 +234,82 @@ class AnalyticSupperAppWorker {
                 totalWallet: dashboardData14days.length ? dashboardData14days[0].addressTotal : 0,
                 totalTransferVolume: dashboardData14days.length ? dashboardData14days[0].transactionVolumeTotal : 0,
                 totalTransferTransaction: dashboardData14days.length ? dashboardData14days[0].transactionCountTotal : 0,
+            };
+            next();
+        });
+    }
+    static getWalletChart(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const time = new Date('2022-06-30T17:00:00.000Z').getTime();
+            const { type, chart } = req.query;
+            const { matchTime, interval } = (0, index_1.getQueryChart)(type, time);
+            const dataResponse = (0, index_1.getFiledDataDashboardResponse)(chart);
+            const dashboardData = yield DashboardData_1.default.find({
+                interval,
+                startAt: matchTime,
+            }, dataResponse).sort({ startAt: 1 }).lean();
+            req.response = dashboardData;
+            next();
+        });
+    }
+    static getWalletCreateNewAndRestore(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const time = new Date().getTime();
+            const { type } = req.query;
+            const matchTime = (0, index_1.getMatchTime)(type, time);
+            const createNewTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 } }).lean();
+            const createNewMultiTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 }, isMulti: false }).lean();
+            const createNewSingleChainDetailPromise = AddressList_1.default.aggregate([
+                {
+                    $match: {
+                        createdAt: matchTime,
+                        numCreated: { $lte: 1 },
+                        isMulti: false,
+                    },
+                },
+                {
+                    $group: {
+                        _id: '$chain',
+                        total: { $sum: 1 },
+                    },
+                },
+            ]);
+            const restoreTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 } }).lean();
+            const restoreMultiTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 }, isMulti: false }).lean();
+            const restoreSingleChainDetailPromise = AddressList_1.default.aggregate([
+                {
+                    $match: {
+                        createdAt: matchTime,
+                        numCreated: { $gt: 1 },
+                        isMulti: false,
+                    },
+                },
+                {
+                    $group: {
+                        _id: '$chain',
+                        total: { $sum: 1 },
+                    },
+                },
+            ]);
+            const [createNewTotal, createNewMultiTotal, createNewSingleChainDetail, restoreTotal, restoreMultiTotal, restoreSingleChainDetail] = yield Promise.all([createNewTotalPromise, createNewMultiTotalPromise, createNewSingleChainDetailPromise, restoreTotalPromise, restoreMultiTotalPromise, restoreSingleChainDetailPromise]);
+            const percentRestoreMultiChain = (restoreMultiTotal / restoreTotal) * 100;
+            const percentCreateNewMultiChain = (createNewMultiTotal / createNewTotal) * 100;
+            const createNewSingleChainTotal = createNewSingleChainDetail.reduce((total, value) => total + value.total, 0);
+            const restoreSingleChainTotal = restoreSingleChainDetail.reduce((total, value) => total + value.total, 0);
+            req.response = {
+                walletCreate: createNewTotal + restoreTotal,
+                createNew: {
+                    total: createNewTotal,
+                    singleChain: percentCreateNewMultiChain,
+                    multiChain: 100 - percentCreateNewMultiChain,
+                    singleChainDetail: createNewSingleChainDetail.map((item) => ({ chain: item._id, percent: createNewSingleChainTotal ? (item.total / createNewSingleChainTotal) * 100 : 0 })),
+                },
+                restore: {
+                    total: restoreTotal,
+                    singleChain: percentRestoreMultiChain,
+                    multiChain: 100 - percentRestoreMultiChain,
+                    singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
+                },
             };
             next();
         });

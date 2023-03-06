@@ -119,6 +119,111 @@ export const getMatchTime = (type, time) => {
   return matchTime;
 };
 
+export const getQueryChart = (type, time) => {
+  const to = moment(time);
+  let from;
+  let matchTime;
+  let interval;
+
+  switch (type) {
+    case 'month':
+      interval = 'day';
+      from = moment(time).subtract(1, 'month');
+      matchTime = {
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
+      };
+      break;
+
+    case 'all':
+      interval = 'month';
+      matchTime = {
+        $lt: new Date(to.valueOf()),
+      };
+      break;
+
+    default:
+      interval = 'day';
+      from = moment(time).subtract(7, 'day');
+      matchTime = {
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
+      };
+      break;
+  }
+
+  return { matchTime, interval };
+};
+
+export const getFiledDataDashboardResponse = (chart) => {
+  let dataResponse;
+  switch (chart) {
+    // chart dashboard
+    case 'user':
+      dataResponse = {
+        _id: 0,
+        userTotal: 1,
+        userActive: 1,
+        userNew: 1,
+        startAt: 1,
+      };
+      break;
+
+    case 'address':
+      dataResponse = {
+        _id: 0,
+        addressTotal: 1,
+        addressActive: 1,
+        addressNew: 1,
+        startAt: 1,
+      };
+      break;
+
+    case 'xpoint':
+      dataResponse = {
+        _id: 0,
+        pointNew: 1,
+        pointTotal: 1,
+        startAt: 1,
+      };
+      break;
+
+    // chart wallet
+    case 'newWallet':
+      dataResponse = {
+        _id: 0,
+        addressNew: 1,
+        startAt: 1,
+      };
+      break;
+
+    case 'transferVolume':
+      dataResponse = {
+        _id: 0,
+        transactionVolume: 1,
+        transactionVolumeTotal: 1,
+        transactionVolumeSummary: 1,
+        startAt: 1,
+      };
+      break;
+
+    case 'transferTransaction':
+      dataResponse = {
+        _id: 0,
+        transactionCount: 1,
+        transactionCountTotal: 1,
+        transactionCountSummary: 1,
+        startAt: 1,
+      };
+      break;
+
+    default:
+      break;
+  }
+
+  return dataResponse;
+};
+
 export const updateCacheRedislocal = async (key, func, currentTime) => {
   const payload = await func();
   saveStorage(key, JSON.stringify({ data: payload, time: currentTime }));

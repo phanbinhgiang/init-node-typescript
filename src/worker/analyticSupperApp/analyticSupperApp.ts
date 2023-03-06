@@ -8,7 +8,9 @@ import User from '../../model/user/User';
 import KYCVerify from '../../model/user/KYCVerify';
 import IPUser from '../../model/user/IPUser';
 import DeviceSource from '../../model/DeviceSource/DeviceSource';
-import { getMatchTime, getQueryTimeArray } from '../function/index';
+import {
+  getMatchTime, getQueryTimeArray, getQueryChart, getFiledDataDashboardResponse,
+} from '../function/index';
 import AddressList from '../../model/addressList/AddressList';
 
 export default class AnalyticSupperAppWorker {
@@ -73,70 +75,13 @@ export default class AnalyticSupperAppWorker {
   static async getChartDashboard(req: RequestCustom, res: Response, next: NextFunction) {
     const time = new Date().getTime();
     const { type, chart } = req.query;
-    const to = moment(time);
-    let from;
-    let matchTime;
 
-    switch (type) {
-      case 'month':
-        from = moment(time).subtract(1, 'month');
-        matchTime = {
-          $gte: new Date(from.valueOf()),
-          $lt: new Date(to.valueOf()),
-        };
-        break;
+    const { matchTime, interval } = getQueryChart(type, time);
 
-      case 'all':
-        matchTime = {
-          $lt: new Date(to.valueOf()),
-        };
-        break;
+    const dataResponse = getFiledDataDashboardResponse(chart);
 
-      default:
-        from = moment(time).subtract(7, 'day');
-        matchTime = {
-          $gte: new Date(from.valueOf()),
-          $lt: new Date(to.valueOf()),
-        };
-        break;
-    }
-
-    let dataResponse;
-    switch (chart) {
-      case 'user':
-        dataResponse = {
-          _id: 0,
-          userTotal: 1,
-          userActive: 1,
-          userNew: 1,
-          startAt: 1,
-        };
-        break;
-
-      case 'address':
-        dataResponse = {
-          _id: 0,
-          addressTotal: 1,
-          addressActive: 1,
-          addressNew: 1,
-          startAt: 1,
-        };
-        break;
-
-      case 'xpoint':
-        dataResponse = {
-          _id: 0,
-          pointNew: 1,
-          pointTotal: 1,
-          startAt: 1,
-        };
-        break;
-
-      default:
-        break;
-    }
     const dashboardData: any = await DashboardData.find({
-      interval: 'day',
+      interval,
       startAt: matchTime,
     }, dataResponse).sort({ startAt: 1 }).lean();
 
@@ -304,6 +249,87 @@ export default class AnalyticSupperAppWorker {
       totalWallet: dashboardData14days.length ? dashboardData14days[0].addressTotal : 0,
       totalTransferVolume: dashboardData14days.length ? dashboardData14days[0].transactionVolumeTotal : 0,
       totalTransferTransaction: dashboardData14days.length ? dashboardData14days[0].transactionCountTotal : 0,
+    };
+    next();
+  }
+
+  static async getWalletChart(req: RequestCustom, res: Response, next: NextFunction) {
+    const time = new Date().getTime();
+    const { type, chart } = req.query;
+
+    const { matchTime, interval } = getQueryChart(type, time);
+
+    const dataResponse = getFiledDataDashboardResponse(chart);
+
+    const dashboardData: any = await DashboardData.find({
+      interval,
+      startAt: matchTime,
+    }, dataResponse).sort({ startAt: 1 }).lean();
+
+    req.response = dashboardData;
+    next();
+  }
+
+  static async getWalletCreateNewAndRestore(req: RequestCustom, res: Response, next: NextFunction) {
+    const time = new Date().getTime();
+    const { type } = req.query;
+    const matchTime = getMatchTime(type, time);
+    const createNewTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 } }).lean();
+    const createNewMultiTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 }, isMulti: false }).lean();
+    const createNewSingleChainDetailPromise = AddressList.aggregate([
+      {
+        $match: {
+          createdAt: matchTime,
+          numCreated: { $lte: 1 },
+          isMulti: false,
+        },
+      },
+      {
+        $group: {
+          _id: '$chain',
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const restoreTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 } }).lean();
+    const restoreMultiTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 }, isMulti: false }).lean();
+    const restoreSingleChainDetailPromise = AddressList.aggregate([
+      {
+        $match: {
+          createdAt: matchTime,
+          numCreated: { $gt: 1 },
+          isMulti: false,
+        },
+      },
+      {
+        $group: {
+          _id: '$chain',
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const [createNewTotal, createNewMultiTotal, createNewSingleChainDetail, restoreTotal, restoreMultiTotal, restoreSingleChainDetail] = await Promise.all([createNewTotalPromise, createNewMultiTotalPromise, createNewSingleChainDetailPromise, restoreTotalPromise, restoreMultiTotalPromise, restoreSingleChainDetailPromise]);
+    const percentRestoreMultiChain = (restoreMultiTotal / restoreTotal) * 100;
+    const percentCreateNewMultiChain = (createNewMultiTotal / createNewTotal) * 100;
+    const createNewSingleChainTotal = createNewSingleChainDetail.reduce((total, value) => total + value.total, 0);
+    const restoreSingleChainTotal = restoreSingleChainDetail.reduce((total, value) => total + value.total, 0);
+
+    req.response = {
+      walletCreate: createNewTotal + restoreTotal,
+      createNew: {
+        total: createNewTotal,
+        singleChain: percentCreateNewMultiChain,
+        multiChain: 100 - percentCreateNewMultiChain,
+        singleChainDetail: createNewSingleChainDetail.map((item) => ({ chain: item._id, percent: createNewSingleChainTotal ? (item.total / createNewSingleChainTotal) * 100 : 0 })),
+      },
+      restore: {
+        total: restoreTotal,
+        singleChain: percentRestoreMultiChain,
+        multiChain: 100 - percentRestoreMultiChain,
+        singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
+      },
     };
     next();
   }

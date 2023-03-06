@@ -15,5 +15,7 @@ router.use('/app/user/country', analyticSupperApp_1.default.getPopularCountries)
 router.use('/app/user/device', analyticSupperApp_1.default.getDeviceDashboard);
 // wallet
 router.use('/app/wallet', analyticSupperApp_1.default.getWalletDashboard);
+router.use('/app/wallet/chart', analyticSupperApp_1.default.getWalletChart);
+router.use('/app/wallet/chart/detail', analyticSupperApp_1.default.getWalletCreateNewAndRestore);
 exports.default = router;
 //# sourceMappingURL=index.js.map

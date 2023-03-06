@@ -7,4 +7,5 @@ export default createSchema({
   lastCreated: defaultModel.date,
   source: defaultModel.string,
   createdUser: defaultModel.array,
+  isMulti: defaultModel.boolean,
 }, 'AddressList', null, null);
