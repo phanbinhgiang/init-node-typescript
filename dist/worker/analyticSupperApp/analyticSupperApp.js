@@ -20,6 +20,7 @@ const IPUser_1 = __importDefault(require("../../model/user/IPUser"));
 const DeviceSource_1 = __importDefault(require("../../model/DeviceSource/DeviceSource"));
 const index_1 = require("../function/index");
 const AddressList_1 = __importDefault(require("../../model/addressList/AddressList"));
+const dagoraHistory_1 = __importDefault(require("../../model/dagora/dagoraHistory"));
 class AnalyticSupperAppWorker {
     // DashBoard
     static getTotalDashboardData(req, res, next) {
@@ -240,7 +241,7 @@ class AnalyticSupperAppWorker {
     }
     static getWalletChart(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date('2022-06-30T17:00:00.000Z').getTime();
+            const time = new Date().getTime();
             const { type, chart } = req.query;
             const { matchTime, interval } = (0, index_1.getQueryChart)(type, time);
             const dataResponse = (0, index_1.getFiledDataDashboardResponse)(chart);
@@ -311,6 +312,50 @@ class AnalyticSupperAppWorker {
                     singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
                 },
             };
+            next();
+        });
+    }
+    static getDetailTransaction(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const time = new Date().getTime();
+            const { type, limit = 10, page = 1 } = req.query;
+            const { matchTime } = (0, index_1.getQueryChart)(type, time);
+            const dagoraHistoryData = yield dagoraHistory_1.default.aggregate([
+                {
+                    $match: {
+                        createdAt: matchTime,
+                    },
+                },
+                {
+                    $addFields: {
+                        value: { $multiply: ['$amount', '$price'] },
+                    },
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        from: 1,
+                        chain: 1,
+                        address: 1,
+                        value: 1,
+                        tokenAddress: 1,
+                        createdAt: 1,
+                    },
+                },
+                {
+                    $sort: { createdAt: -1 },
+                },
+                {
+                    $sort: { value: -1 },
+                },
+                {
+                    $skip: parseInt(limit) * (parseInt(page) - 1),
+                },
+                {
+                    $limit: parseInt(limit),
+                },
+            ]);
+            req.response = dagoraHistoryData;
             next();
         });
     }

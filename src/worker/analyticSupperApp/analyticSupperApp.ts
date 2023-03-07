@@ -12,6 +12,7 @@ import {
   getMatchTime, getQueryTimeArray, getQueryChart, getFiledDataDashboardResponse,
 } from '../function/index';
 import AddressList from '../../model/addressList/AddressList';
+import DagoraHistory from '../../model/dagora/dagoraHistory';
 
 export default class AnalyticSupperAppWorker {
   // DashBoard
@@ -331,6 +332,50 @@ export default class AnalyticSupperAppWorker {
         singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
       },
     };
+    next();
+  }
+
+  static async getDetailTransaction(req: RequestCustom, res: Response, next: NextFunction) {
+    const time = new Date().getTime();
+    const { type, limit = 10, page = 1 } = req.query;
+
+    const { matchTime } = getQueryChart(type, time);
+    const dagoraHistoryData = await DagoraHistory.aggregate([
+      {
+        $match: {
+          createdAt: matchTime,
+        },
+      },
+      {
+        $addFields: {
+          value: { $multiply: ['$amount', '$price'] },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          from: 1,
+          chain: 1,
+          address: 1,
+          value: 1,
+          tokenAddress: 1,
+          createdAt: 1,
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $sort: { value: -1 },
+      },
+      {
+        $skip: parseInt(limit) * (parseInt(page) - 1),
+      },
+      {
+        $limit: parseInt(limit),
+      },
+    ]);
+    req.response = dagoraHistoryData;
     next();
   }
 }

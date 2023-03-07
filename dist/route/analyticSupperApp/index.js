@@ -17,5 +17,6 @@ router.use('/app/user/device', analyticSupperApp_1.default.getDeviceDashboard);
 router.use('/app/wallet', analyticSupperApp_1.default.getWalletDashboard);
 router.use('/app/wallet/chart', analyticSupperApp_1.default.getWalletChart);
 router.use('/app/wallet/chart/detail', analyticSupperApp_1.default.getWalletCreateNewAndRestore);
+router.use('/app/wallet/chart/transaction', analyticSupperApp_1.default.getDetailTransaction);
 exports.default = router;
 //# sourceMappingURL=index.js.map

@@ -16,5 +16,6 @@ router.use('/app/user/device', AnalyticSupperAppWorker.getDeviceDashboard);
 router.use('/app/wallet', AnalyticSupperAppWorker.getWalletDashboard);
 router.use('/app/wallet/chart', AnalyticSupperAppWorker.getWalletChart);
 router.use('/app/wallet/chart/detail', AnalyticSupperAppWorker.getWalletCreateNewAndRestore);
+router.use('/app/wallet/chart/transaction', AnalyticSupperAppWorker.getDetailTransaction);
 
 export default router;
