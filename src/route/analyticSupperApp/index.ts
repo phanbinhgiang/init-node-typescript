@@ -18,4 +18,11 @@ router.use('/app/wallet/chart', AnalyticSupperAppWorker.getWalletChart);
 router.use('/app/wallet/chart/detail', AnalyticSupperAppWorker.getWalletCreateNewAndRestore);
 router.use('/app/wallet/chart/transaction', AnalyticSupperAppWorker.getDetailTransaction);
 
+// swap
+router.use('/app/swap', AnalyticSupperAppWorker.getSwapDashboard);
+router.use('/app/swap/chart', AnalyticSupperAppWorker.getSwapChart);
+
+// update dashboardData
+router.use('/app/update', AnalyticSupperAppWorker.updateDashboardData);
+
 export default router;

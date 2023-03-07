@@ -30,5 +30,9 @@ exports.default = (0, __1.createSchema)({
     userTempActive: __1.defaultModel.number,
     userTempNew: __1.defaultModel.number,
     userTempTotal: __1.defaultModel.number,
+    swapUser: __1.defaultModel.number,
+    swapAddress: __1.defaultModel.number,
+    swapUserSummary: __1.defaultModel.array,
+    swapAddressSummary: __1.defaultModel.array,
 }, 'DashboardData', null, null);
 //# sourceMappingURL=DashboardData.js.map

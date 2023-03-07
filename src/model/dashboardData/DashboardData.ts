@@ -29,4 +29,9 @@ export default createSchema({
   userTempActive: defaultModel.number,
   userTempNew: defaultModel.number,
   userTempTotal: defaultModel.number,
+  swapUser: defaultModel.number,
+  swapAddress: defaultModel.number,
+  swapUserSummary: defaultModel.array,
+  swapAddressSummary: defaultModel.array,
+
 }, 'DashboardData', null, null);

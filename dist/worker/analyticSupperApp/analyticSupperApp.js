@@ -21,6 +21,7 @@ const DeviceSource_1 = __importDefault(require("../../model/DeviceSource/DeviceS
 const index_1 = require("../function/index");
 const AddressList_1 = __importDefault(require("../../model/addressList/AddressList"));
 const dagoraHistory_1 = __importDefault(require("../../model/dagora/dagoraHistory"));
+const AggregatorHistory_1 = __importDefault(require("../../model/aggregatorHistory/AggregatorHistory"));
 class AnalyticSupperAppWorker {
     // DashBoard
     static getTotalDashboardData(req, res, next) {
@@ -214,7 +215,7 @@ class AnalyticSupperAppWorker {
             }, { _id: 0, createdAt: 1, createdUser: 1 }).sort({ createdAt: -1 }).lean();
             const addressData7daysBeforePromise = AddressList_1.default.find({
                 createdAt: {
-                    $gt: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
+                    $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
                     $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
                 },
             }, { _id: 0, createdAt: 1, createdUser: 1 }).sort({ createdAt: -1 }).lean();
@@ -356,6 +357,365 @@ class AnalyticSupperAppWorker {
                 },
             ]);
             req.response = dagoraHistoryData;
+            next();
+        });
+    }
+    // Swap dashboard
+    static getSwapDashboard(req, res, next) {
+        var _a, _b, _c, _d;
+        return __awaiter(this, void 0, void 0, function* () {
+            const time = new Date('2023-02-10 07:41:00.360Z').getTime();
+            const to = (0, moment_1.default)(time);
+            const from = (0, moment_1.default)(time).subtract(14, 'day');
+            const { chain = 'all' } = req.query;
+            const dashboardData14days = yield DashboardData_1.default.find({
+                interval: 'day',
+                startAt: {
+                    $gte: new Date(from.valueOf()),
+                    $lt: new Date(to.valueOf()),
+                },
+            }, {
+                _id: 0,
+                swapVolume: 1,
+                swapVolumeTotal: 1,
+                swapCount: 1,
+                swapCountTotal: 1,
+                swapVolumeSummary: 1,
+                swapCountSummary: 1,
+                startAt: 1,
+            }).sort({ startAt: -1 }).lean();
+            const getDataAllChain = (type) => {
+                const totalData7days = dashboardData14days.slice(0, 7).reduce((total, item) => total + ((item === null || item === void 0 ? void 0 : item[type]) || 0), 0);
+                const totalData7daysBefore = dashboardData14days.slice(7).reduce((total, item) => total + ((item === null || item === void 0 ? void 0 : item[type]) || 0), 0);
+                return {
+                    total: totalData7days,
+                    percent: totalData7daysBefore ? ((totalData7days - totalData7daysBefore) / totalData7daysBefore) * 100 : 0,
+                };
+            };
+            const getDataSingleChain = (type) => {
+                const totalData7days = dashboardData14days.slice(0, 7).filter((item) => item === null || item === void 0 ? void 0 : item[type]).map((item) => item[type]).flat();
+                const data7daysChain = totalData7days.filter((item) => item.chain === chain).reduce((total, it) => total + (it.value || 0), 0);
+                const totalData7daysBefore = dashboardData14days.slice(7).filter((item) => item === null || item === void 0 ? void 0 : item[type]).map((item) => item[type]).flat();
+                const data7daysChainBefore = totalData7daysBefore.filter((item) => item.chain === chain).reduce((total, it) => total + (it.value || 0), 0);
+                const percent = data7daysChainBefore ? ((data7daysChain - data7daysChainBefore) / data7daysChainBefore) * 100 : 0;
+                return { total: data7daysChain, percent };
+            };
+            if (chain === 'all') {
+                const swapUserData7daysPromise = AggregatorHistory_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: {
+                                $gte: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                                $lt: new Date((0, moment_1.default)(time).valueOf()),
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$createdUser',
+                        },
+                    },
+                ]);
+                const swapUserData7daysBeforePromise = AggregatorHistory_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: {
+                                $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
+                                $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$createdUser',
+                        },
+                    },
+                ]);
+                const swapAddressData7daysPromise = AggregatorHistory_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: {
+                                $gte: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                                $lt: new Date((0, moment_1.default)(time).valueOf()),
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$from',
+                        },
+                    },
+                ]);
+                const swapAddressData7daysBeforePromise = AggregatorHistory_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: {
+                                $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
+                                $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                            },
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$from',
+                        },
+                    },
+                ]);
+                const [swapUserData7days, swapUserData7daysBefore, swapAddressData7days, swapAddressData7daysBefore] = yield Promise.all([swapUserData7daysPromise, swapUserData7daysBeforePromise, swapAddressData7daysPromise, swapAddressData7daysBeforePromise]);
+                req.response = {
+                    swapUser: {
+                        total: swapUserData7days.length,
+                        percent: (swapUserData7daysBefore.length) ? ((swapUserData7days.length - swapUserData7daysBefore.length) / swapUserData7daysBefore.length) * 100 : 0,
+                    },
+                    totalSwapAddress: {
+                        total: swapAddressData7days.length,
+                        percent: (swapAddressData7daysBefore.length) ? ((swapAddressData7days.length - swapAddressData7daysBefore.length) / swapAddressData7daysBefore.length) * 100 : 0,
+                    },
+                    totalSwapVolume: {
+                        total: getDataAllChain('swapVolume').total,
+                        percent: getDataAllChain('swapVolume').percent,
+                    },
+                    totalTransaction: {
+                        total: getDataAllChain('swapCount').total,
+                        percent: getDataAllChain('swapCount').percent,
+                    },
+                    // Waiting doe data
+                    swapRevenue: {
+                        total: 0,
+                        percent: 0,
+                    },
+                    swapVolume: ((_a = dashboardData14days[0]) === null || _a === void 0 ? void 0 : _a.swapVolumeTotal) || 0,
+                    swapTransaction: ((_b = dashboardData14days[0]) === null || _b === void 0 ? void 0 : _b.swapCountTotal) || 0,
+                };
+            }
+            else {
+                const swapUserData7daysPromise = AggregatorHistory_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: {
+                                $gte: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                                $lt: new Date((0, moment_1.default)(time).valueOf()),
+                            },
+                            chain,
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$createdUser',
+                        },
+                    },
+                ]);
+                const swapUserData7daysBeforePromise = AggregatorHistory_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: {
+                                $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
+                                $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                            },
+                            chain,
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$createdUser',
+                        },
+                    },
+                ]);
+                const swapAddressData7daysPromise = AggregatorHistory_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: {
+                                $gte: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                                $lt: new Date((0, moment_1.default)(time).valueOf()),
+                            },
+                            chain,
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$from',
+                        },
+                    },
+                ]);
+                const swapAddressData7daysBeforePromise = AggregatorHistory_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: {
+                                $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
+                                $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                            },
+                            chain,
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$from',
+                        },
+                    },
+                ]);
+                const [swapUserData7days, swapUserData7daysBefore, swapAddressData7days, swapAddressData7daysBefore] = yield Promise.all([swapUserData7daysPromise, swapUserData7daysBeforePromise, swapAddressData7daysPromise, swapAddressData7daysBeforePromise]);
+                req.response = {
+                    swapUser: {
+                        total: swapUserData7days.length,
+                        percent: (swapUserData7daysBefore.length) ? ((swapUserData7days.length - swapUserData7daysBefore.length) / swapUserData7daysBefore.length) * 100 : 0,
+                    },
+                    totalSwapAddress: {
+                        total: swapAddressData7days.length,
+                        percent: (swapAddressData7daysBefore.length) ? ((swapAddressData7days.length - swapAddressData7daysBefore.length) / swapAddressData7daysBefore.length) * 100 : 0,
+                    },
+                    totalSwapVolume: {
+                        total: getDataSingleChain('swapVolumeSummary').total,
+                        percent: getDataSingleChain('swapVolumeSummary').percent,
+                    },
+                    totalTransaction: {
+                        total: getDataSingleChain('swapCountSummary').total,
+                        percent: getDataSingleChain('swapCountSummary').percent,
+                    },
+                    // Waiting doe data
+                    swapRevenue: {
+                        total: 0,
+                        percent: 0,
+                    },
+                    // default total chain
+                    swapVolume: ((_c = dashboardData14days[0]) === null || _c === void 0 ? void 0 : _c.swapVolumeTotal) || 0,
+                    swapTransaction: ((_d = dashboardData14days[0]) === null || _d === void 0 ? void 0 : _d.swapCountTotal) || 0,
+                };
+            }
+            next();
+        });
+    }
+    static getSwapChart(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const time = new Date('2022-07-23 17:00:00.000Z').getTime();
+            const { type, chart } = req.query;
+            const { matchTime, interval } = (0, index_1.getQueryChart)(type, time);
+            const dataResponse = (0, index_1.getFiledDataDashboardResponse)(chart);
+            const dashboardData = yield DashboardData_1.default.find({
+                interval,
+                startAt: matchTime,
+            }, dataResponse).sort({ startAt: 1 }).lean();
+            req.response = dashboardData;
+            next();
+        });
+    }
+    // update dashboardData
+    static updateDashboardData(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { from, to } = req.query;
+            const arrayTimeDay = (0, index_1.getQueryTimeArray)(from, to, 'day');
+            const arrayTimeWeek = (0, index_1.getQueryTimeArray)(from, to, 'week');
+            const arrayTimeMonth = (0, index_1.getQueryTimeArray)(from, to, 'month');
+            const createAndUpdateDashboardData = (arrayTime, interval) => __awaiter(this, void 0, void 0, function* () {
+                yield Promise.all(arrayTime.map((time) => __awaiter(this, void 0, void 0, function* () {
+                    const swapUser = (yield AggregatorHistory_1.default.aggregate([
+                        {
+                            $match: {
+                                createdAt: {
+                                    $gte: time.start,
+                                    $lte: time.end,
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: '$createdUser',
+                            },
+                        },
+                    ])).length;
+                    const swapAddress = (yield AggregatorHistory_1.default.aggregate([
+                        {
+                            $match: {
+                                createdAt: {
+                                    $gte: time.start,
+                                    $lte: time.end,
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: '$from',
+                            },
+                        },
+                    ])).length;
+                    const listChain = yield AggregatorHistory_1.default.aggregate([
+                        {
+                            $match: {
+                                createdAt: {
+                                    $gte: time.start,
+                                    $lte: time.end,
+                                },
+                            },
+                        },
+                        {
+                            $group: {
+                                _id: '$chain',
+                            },
+                        },
+                    ]);
+                    const dataSummary = yield Promise.all(listChain.map((chain) => __awaiter(this, void 0, void 0, function* () {
+                        const dataUserChain = yield AggregatorHistory_1.default.aggregate([
+                            {
+                                $match: {
+                                    createdAt: {
+                                        $gte: time.start,
+                                        $lte: time.end,
+                                    },
+                                    chain: chain._id,
+                                },
+                            },
+                            {
+                                $group: {
+                                    _id: '$createdUser',
+                                },
+                            },
+                        ]);
+                        const dataAddressChain = yield AggregatorHistory_1.default.aggregate([
+                            {
+                                $match: {
+                                    createdAt: {
+                                        $gte: time.start,
+                                        $lte: time.end,
+                                    },
+                                    chain: chain._id,
+                                },
+                            },
+                            {
+                                $group: {
+                                    _id: '$from',
+                                },
+                            },
+                        ]);
+                        return { swapUser: { chain: chain._id, value: dataUserChain.length }, swapAddress: { chain: chain._id, value: dataAddressChain.length } };
+                    })));
+                    const swapUserSummary = dataSummary.map((item) => item.swapUser);
+                    const swapAddressSummary = dataSummary.map((item) => item.swapAddress);
+                    const findDataDashBoard = yield DashboardData_1.default.findOne({ id: `${interval}_${time.start.getTime()}_${time.end.getTime()}` });
+                    if (!findDataDashBoard) {
+                        yield DashboardData_1.default.create({
+                            id: `${interval}_${time.start.getTime()}_${time.end.getTime()}`,
+                            interval,
+                            swapUser,
+                            swapAddress,
+                            swapUserSummary,
+                            swapAddressSummary,
+                            startAt: time.start,
+                            endAt: time.end,
+                        });
+                    }
+                    else {
+                        yield findDataDashBoard.updateOne({
+                            swapUser,
+                            swapAddress,
+                            swapUserSummary,
+                            swapAddressSummary,
+                        });
+                    }
+                })));
+            });
+            createAndUpdateDashboardData(arrayTimeDay, 'day');
+            createAndUpdateDashboardData(arrayTimeWeek, 'week');
+            createAndUpdateDashboardData(arrayTimeMonth, 'month');
+            req.response = true;
             next();
         });
     }

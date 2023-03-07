@@ -18,5 +18,10 @@ router.use('/app/wallet', analyticSupperApp_1.default.getWalletDashboard);
 router.use('/app/wallet/chart', analyticSupperApp_1.default.getWalletChart);
 router.use('/app/wallet/chart/detail', analyticSupperApp_1.default.getWalletCreateNewAndRestore);
 router.use('/app/wallet/chart/transaction', analyticSupperApp_1.default.getDetailTransaction);
+// swap
+router.use('/app/swap', analyticSupperApp_1.default.getSwapDashboard);
+router.use('/app/swap/chart', analyticSupperApp_1.default.getSwapChart);
+// update dashboardData
+router.use('/app/update', analyticSupperApp_1.default.updateDashboardData);
 exports.default = router;
 //# sourceMappingURL=index.js.map

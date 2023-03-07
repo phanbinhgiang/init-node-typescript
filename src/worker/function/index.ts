@@ -168,7 +168,6 @@ export const getFiledDataDashboardResponse = (chart) => {
         startAt: 1,
       };
       break;
-
     case 'address':
       dataResponse = {
         _id: 0,
@@ -178,7 +177,6 @@ export const getFiledDataDashboardResponse = (chart) => {
         startAt: 1,
       };
       break;
-
     case 'xpoint':
       dataResponse = {
         _id: 0,
@@ -196,7 +194,6 @@ export const getFiledDataDashboardResponse = (chart) => {
         startAt: 1,
       };
       break;
-
     case 'transferVolume':
       dataResponse = {
         _id: 0,
@@ -206,13 +203,32 @@ export const getFiledDataDashboardResponse = (chart) => {
         startAt: 1,
       };
       break;
-
     case 'transferTransaction':
       dataResponse = {
         _id: 0,
         transactionCount: 1,
         transactionCountTotal: 1,
         transactionCountSummary: 1,
+        startAt: 1,
+      };
+      break;
+
+    //  chart swap
+    case 'swapVolume':
+      dataResponse = {
+        _id: 0,
+        swapVolume: 1,
+        swapVolumeTotal: 1,
+        swapVolumeSummary: 1,
+        startAt: 1,
+      };
+      break;
+    case 'swapTransaction':
+      dataResponse = {
+        _id: 0,
+        swapCount: 1,
+        swapCountTotal: 1,
+        swapCountSummary: 1,
         startAt: 1,
       };
       break;
