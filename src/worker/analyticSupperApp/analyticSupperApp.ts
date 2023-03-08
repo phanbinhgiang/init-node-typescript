@@ -382,7 +382,7 @@ export default class AnalyticSupperAppWorker {
 
   // Swap dashboard
   static async getSwapDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date('2023-02-10 07:41:00.360Z').getTime();
+    const time = new Date().getTime();
     const to = moment(time);
     const from = moment(time).subtract(14, 'day');
 
@@ -630,7 +630,7 @@ export default class AnalyticSupperAppWorker {
   }
 
   static async getSwapChart(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date('2022-07-23 17:00:00.000Z').getTime();
+    const time = new Date().getTime();
     const { type, chart } = req.query;
 
     const { matchTime, interval } = getQueryChart(type, time);
@@ -643,6 +643,62 @@ export default class AnalyticSupperAppWorker {
     }, dataResponse).sort({ startAt: 1 }).lean();
 
     req.response = dashboardData;
+    next();
+  }
+
+  static async getTopTokenSwap(req: RequestCustom, res: Response, next: NextFunction) {
+    const time = new Date().getTime();
+    const { type, chain = 'all' } = req.query;
+    const matchTime = getMatchTime(type, time);
+    let match;
+    if (chain === 'all') {
+      match = {
+        createdAt: matchTime,
+      };
+    } else {
+      match = {
+        createdAt: matchTime,
+        chain,
+      };
+    }
+    const aggregatorHistoryDataToken0 = await AggregatorHistory.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $group: {
+          _id: {
+            symbol: '$token0.symbol',
+          },
+          volume: { $sum: '$volume' },
+        },
+      },
+    ]);
+
+    const aggregatorHistoryDataToken1 = await AggregatorHistory.aggregate([
+      {
+        $match: match,
+      },
+      {
+        $group: {
+          _id: {
+            symbol: '$token1.symbol',
+          },
+          volume: { $sum: '$volume' },
+        },
+      },
+    ]);
+
+    const symbolToken0 = aggregatorHistoryDataToken0.map((item) => item._id.symbol);
+    const symbolToken1 = aggregatorHistoryDataToken0.map((item) => item._id.symbol);
+    const symbolTokens = [...symbolToken0, ...symbolToken1].filter((value, index, self) => self.indexOf(value) === index);
+
+    const aggregatorHistoryData = symbolTokens.map((item) => {
+      const dataToken0 = aggregatorHistoryDataToken0.find((it) => it._id.symbol === item);
+      const dataToken1 = aggregatorHistoryDataToken1.find((it) => it._id.symbol === item);
+      return { symbol: item, volume: (dataToken0?.volume || 0) + (dataToken1?.volume || 0) };
+    }).sort((a, b) => b.volume - a.volume).slice(0, 5);
+    req.response = aggregatorHistoryData;
     next();
   }
 

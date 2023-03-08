@@ -364,7 +364,7 @@ class AnalyticSupperAppWorker {
     static getSwapDashboard(req, res, next) {
         var _a, _b, _c, _d;
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date('2023-02-10 07:41:00.360Z').getTime();
+            const time = new Date().getTime();
             const to = (0, moment_1.default)(time);
             const from = (0, moment_1.default)(time).subtract(14, 'day');
             const { chain = 'all' } = req.query;
@@ -586,7 +586,7 @@ class AnalyticSupperAppWorker {
     }
     static getSwapChart(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date('2022-07-23 17:00:00.000Z').getTime();
+            const time = new Date().getTime();
             const { type, chart } = req.query;
             const { matchTime, interval } = (0, index_1.getQueryChart)(type, time);
             const dataResponse = (0, index_1.getFiledDataDashboardResponse)(chart);
@@ -595,6 +595,61 @@ class AnalyticSupperAppWorker {
                 startAt: matchTime,
             }, dataResponse).sort({ startAt: 1 }).lean();
             req.response = dashboardData;
+            next();
+        });
+    }
+    static getTopTokenSwap(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const time = new Date().getTime();
+            const { type, chain = 'all' } = req.query;
+            const matchTime = (0, index_1.getMatchTime)(type, time);
+            let match;
+            if (chain === 'all') {
+                match = {
+                    createdAt: matchTime,
+                };
+            }
+            else {
+                match = {
+                    createdAt: matchTime,
+                    chain,
+                };
+            }
+            const aggregatorHistoryDataToken0 = yield AggregatorHistory_1.default.aggregate([
+                {
+                    $match: match,
+                },
+                {
+                    $group: {
+                        _id: {
+                            symbol: '$token0.symbol',
+                        },
+                        volume: { $sum: '$volume' },
+                    },
+                },
+            ]);
+            const aggregatorHistoryDataToken1 = yield AggregatorHistory_1.default.aggregate([
+                {
+                    $match: match,
+                },
+                {
+                    $group: {
+                        _id: {
+                            symbol: '$token1.symbol',
+                        },
+                        volume: { $sum: '$volume' },
+                    },
+                },
+            ]);
+            const symbolToken0 = aggregatorHistoryDataToken0.map((item) => item._id.symbol);
+            const symbolToken1 = aggregatorHistoryDataToken0.map((item) => item._id.symbol);
+            const symbolTokens = [...symbolToken0, ...symbolToken1].filter((value, index, self) => self.indexOf(value) === index);
+            const aggregatorHistoryData = symbolTokens.map((item) => {
+                const dataToken0 = aggregatorHistoryDataToken0.find((it) => it._id.symbol === item);
+                const dataToken1 = aggregatorHistoryDataToken1.find((it) => it._id.symbol === item);
+                return { symbol: item, volume: ((dataToken0 === null || dataToken0 === void 0 ? void 0 : dataToken0.volume) || 0) + ((dataToken1 === null || dataToken1 === void 0 ? void 0 : dataToken1.volume) || 0) };
+            }).sort((a, b) => b.volume - a.volume).slice(0, 5);
+            req.response = aggregatorHistoryData;
             next();
         });
     }

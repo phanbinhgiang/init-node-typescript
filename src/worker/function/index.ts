@@ -89,30 +89,30 @@ export const getMatchTime = (type, time) => {
     case 'week':
       from = moment(time).subtract(7, 'day');
       matchTime = {
-        $gt: new Date(from.valueOf()),
-        $lte: new Date(to.valueOf()),
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
       };
       break;
 
     case 'month':
       from = moment(time).subtract(1, 'month');
       matchTime = {
-        $gt: new Date(from.valueOf()),
-        $lte: new Date(to.valueOf()),
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
       };
       break;
 
     case 'all':
       matchTime = {
-        $lte: new Date(to.valueOf()),
+        $lt: new Date(to.valueOf()),
       };
       break;
 
     default:
       from = moment(time).subtract(1, 'day');
       matchTime = {
-        $gt: new Date(from.valueOf()),
-        $lte: new Date(to.valueOf()),
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
       };
       break;
   }

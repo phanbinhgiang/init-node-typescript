@@ -21,6 +21,7 @@ router.use('/app/wallet/chart/transaction', AnalyticSupperAppWorker.getDetailTra
 // swap
 router.use('/app/swap', AnalyticSupperAppWorker.getSwapDashboard);
 router.use('/app/swap/chart', AnalyticSupperAppWorker.getSwapChart);
+router.use('/app/swap/top', AnalyticSupperAppWorker.getTopTokenSwap);
 
 // update dashboardData
 router.use('/app/update', AnalyticSupperAppWorker.updateDashboardData);
