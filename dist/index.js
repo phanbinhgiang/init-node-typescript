@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const get_1 = __importDefault(require("lodash/get"));
 const cors_1 = __importDefault(require("cors"));
 const morgan_1 = __importDefault(require("morgan"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -34,6 +33,7 @@ app.post('/', (req, res) => {
     res.json(true);
 });
 const pretty = (req, res) => {
+    var _a;
     if (!req.response && req.response !== 0 && req.response !== false) {
         res.status(500);
         return res.send(constants_1.mess500);
@@ -44,7 +44,7 @@ const pretty = (req, res) => {
         status: 400,
     };
     message.data = req.response;
-    message.success = (0, get_1.default)(req.response, 'errMess') ? false : (req.success !== false);
+    message.success = ((_a = req.response) === null || _a === void 0 ? void 0 : _a.errMess) ? false : (req.success !== false);
     message.status = req.status || 200;
     return res.status(message.status).send(message);
 };

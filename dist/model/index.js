@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defaultModel = exports.createSchema = void 0;
+exports.defaultModelNew = exports.defaultModel = exports.createSchema = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const constants_1 = require("../middleware/constants");
 const createSchema = (schema, key, options, indexOptions) => {
@@ -47,5 +47,19 @@ exports.defaultModel = {
     object: { type: Object, default: {} },
     stringStatus: { type: String, default: constants_1.postStatus.waitingReview },
     stringContent: { type: Object, default: { gb: '', vn: '' } },
+};
+exports.defaultModelNew = {
+    date: { type: Date },
+    sString: { type: String },
+    string: { type: String, default: '' },
+    numberUnique: { type: Number, required: true, unique: true },
+    stringUnique: { type: String, required: true, unique: true },
+    sArray: { type: Array },
+    array: { type: Array, default: [] },
+    number: { type: Number, default: 0 },
+    boolean: { type: Boolean, default: true },
+    booleanFalse: { type: Boolean, default: false },
+    sObject: { type: Object },
+    object: { type: Object, default: {} },
 };
 //# sourceMappingURL=index.js.map

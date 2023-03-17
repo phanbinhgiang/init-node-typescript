@@ -1,6 +1,5 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import get from 'lodash/get';
 import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
@@ -44,7 +43,7 @@ const pretty = (req, res) => {
     status: 400,
   };
   message.data = req.response;
-  message.success = get(req.response, 'errMess') ? false : (req.success !== false);
+  message.success = req.response?.errMess ? false : (req.success !== false);
   message.status = req.status || 200;
   return res.status(message.status).send(message);
 };

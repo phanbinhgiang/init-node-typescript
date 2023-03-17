@@ -9,11 +9,13 @@ const amberReport_1 = __importDefault(require("./amberReport"));
 const knowledge_1 = __importDefault(require("./knowledge"));
 const dapps_1 = __importDefault(require("./dapps"));
 const analyticSupperApp_1 = __importDefault(require("./analyticSupperApp"));
+const startShip_1 = __importDefault(require("./startShip"));
 const router = express_1.default.Router();
 router.use('/dagora', dagora_1.default);
 router.use('/report', amberReport_1.default);
 router.use('/knowledge', knowledge_1.default);
 router.use('/dapps', dapps_1.default);
 router.use('/analytic', analyticSupperApp_1.default);
+router.use('/start', startShip_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map
