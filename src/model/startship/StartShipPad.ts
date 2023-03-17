@@ -21,7 +21,7 @@ export default createSchema({
   },
   contract: {
     id: defaultModelNew.sString,
-    address: defaultModelNew.sString,
+    address: defaultModelNew.sString, // check with
     owner: defaultModelNew.sString,
     signer: defaultModelNew.sString,
     privateSignature: defaultModelNew.sString,

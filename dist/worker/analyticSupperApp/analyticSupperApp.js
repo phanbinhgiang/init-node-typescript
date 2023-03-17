@@ -22,12 +22,13 @@ const index_1 = require("../function/index");
 const AddressList_1 = __importDefault(require("../../model/addressList/AddressList"));
 const dagoraHistory_1 = __importDefault(require("../../model/dagora/dagoraHistory"));
 const AggregatorHistory_1 = __importDefault(require("../../model/aggregatorHistory/AggregatorHistory"));
+const function_1 = require("../function");
 class AnalyticSupperAppWorker {
     // DashBoard
     static getTotalDashboardData(req, res, next) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date().getTime();
+            const time = new Date('2022-07-23 17:00:00.000Z').getTime();
             const to = (0, moment_1.default)(time);
             const from = (0, moment_1.default)(time).subtract(14, 'day');
             const dashboardData14days = yield DashboardData_1.default.find({
@@ -47,26 +48,18 @@ class AnalyticSupperAppWorker {
                 startAt: 1,
                 pointTotal: 1,
             }).sort({ startAt: -1 }).lean();
-            const getData = (type) => {
-                const totalData7days = dashboardData14days.slice(0, 7).reduce((total, item) => total + ((item === null || item === void 0 ? void 0 : item[type]) || 0), 0);
-                const totalData7daysBefore = dashboardData14days.slice(7).reduce((total, item) => total + ((item === null || item === void 0 ? void 0 : item[type]) || 0), 0);
-                return {
-                    total: totalData7days,
-                    percent: totalData7daysBefore ? ((totalData7days - totalData7daysBefore) / totalData7daysBefore) * 100 : 0,
-                };
-            };
             req.response = {
                 newUser: {
-                    total: getData('userNew').total,
-                    percent: getData('userNew').percent,
+                    total: (0, function_1.getDataDashBoard)('userNew', dashboardData14days).total,
+                    percent: (0, function_1.getDataDashBoard)('userNew', dashboardData14days).percent,
                 },
                 newWallet: {
-                    total: getData('addressNew').total,
-                    percent: getData('addressNew').percent,
+                    total: (0, function_1.getDataDashBoard)('addressNew', dashboardData14days).total,
+                    percent: (0, function_1.getDataDashBoard)('addressNew', dashboardData14days).percent,
                 },
                 swapVolume: {
-                    total: getData('swapVolume').total,
-                    percent: getData('swapVolume').percent,
+                    total: (0, function_1.getDataDashBoard)('swapVolume', dashboardData14days).total,
+                    percent: (0, function_1.getDataDashBoard)('swapVolume', dashboardData14days).percent,
                 },
                 // revenue : ....
                 Revenue: {
@@ -82,10 +75,41 @@ class AnalyticSupperAppWorker {
     }
     static getChartDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date().getTime();
-            const { type, chart } = req.query;
+            const time = new Date('2022-07-23 17:00:00.000Z').getTime();
+            const { type = 'week', chart } = req.query;
             const { matchTime, interval } = (0, index_1.getQueryChart)(type, time);
-            const dataResponse = (0, index_1.getFiledDataDashboardResponse)(chart);
+            let dataResponse;
+            switch (chart) {
+                // chart dashboard
+                case 'user':
+                    dataResponse = {
+                        _id: 0,
+                        userTotal: 1,
+                        userActive: 1,
+                        userNew: 1,
+                        startAt: 1,
+                    };
+                    break;
+                case 'address':
+                    dataResponse = {
+                        _id: 0,
+                        addressTotal: 1,
+                        // addressActive: 1, //????
+                        addressNew: 1,
+                        startAt: 1,
+                    };
+                    break;
+                case 'xpoint':
+                    dataResponse = {
+                        _id: 0,
+                        pointNew: 1,
+                        pointTotal: 1,
+                        startAt: 1,
+                    };
+                    break;
+                default:
+                    break;
+            }
             const dashboardData = yield DashboardData_1.default.find({
                 interval,
                 startAt: matchTime,
@@ -99,7 +123,7 @@ class AnalyticSupperAppWorker {
         return __awaiter(this, void 0, void 0, function* () {
             const time = new Date().getTime();
             const { type } = req.query;
-            const matchTime = (0, index_1.getMatchTime)(type, time);
+            const { matchTime } = (0, index_1.getQueryChart)(type, time);
             const userDataTotalPromise = User_1.default.countDocuments({
                 createdAt: matchTime,
             }).lean();
@@ -120,7 +144,7 @@ class AnalyticSupperAppWorker {
         return __awaiter(this, void 0, void 0, function* () {
             const time = new Date().getTime();
             const { type } = req.query;
-            const matchTime = (0, index_1.getMatchTime)(type, time);
+            const { matchTime } = (0, index_1.getQueryChart)(type, time);
             const dataCountries = yield IPUser_1.default.aggregate([
                 {
                     $match: {
@@ -133,10 +157,15 @@ class AnalyticSupperAppWorker {
                         total: { $sum: 1 },
                     },
                 },
+                {
+                    $sort: {
+                        total: -1,
+                    },
+                },
             ]);
             const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
             const dataRes = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
-            req.response = dataRes.sort((a, b) => a.percent - b.percent);
+            req.response = dataRes;
             next();
         });
     }

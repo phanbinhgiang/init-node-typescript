@@ -3,11 +3,14 @@
 import slug from 'slug';
 import StartShipPad from '../../model/startship/StartShipPad';
 import StartShipParticipant from '../../model/startship/StartShipParticipant';
+import { convertCheckSUM } from '../../common/function';
 
 const TYPE_OBJ = {
   sell: 'sell',
   claim: 'claim',
 };
+
+const CONTRACT_CHECK = '0x7B11a60E3Fbe021dD3faa48B49598B7Ff0C667A4';
 
 export const createSlug = (text) => slug(text);
 
@@ -16,13 +19,24 @@ export default class StarshipServices {
   // createdAt:-1
   // stashipPad
   static async explore(req, res, next) {
-    const { page = 1, size = 10 } = req.query;
-    const statShipPadData = await StartShipPad.find({}).sort({ createdAt: -1 })
+    const {
+      page = 1, size = 10, key = '',
+    } = req.query;
+    const statShipPadData = await StartShipPad.find({
+      $or: [
+        { 'information.name': { $regex: key, $options: 'i' } },
+        { 'information.description': { $regex: key, $options: 'i' } },
+      ],
+    }).sort({ createdAt: -1, 'token0.price': -1, 'token1.price': -1 })
       .skip((parseInt(page) - 1) * parseInt(size)).limit(parseInt(size))
       .lean();
-    req.response = statShipPadData;
+    req.response = {
+      length: statShipPadData.length,
+      statShipPadData,
+    };
     next();
   }
+  // search key words, sort by (time, price)
 
   // stashipPad
   // get Find One
@@ -54,6 +68,8 @@ export default class StarshipServices {
     });
     req.response = true;
     next();
+
+    //
   }
 
   static async logRecord(req, res, next) {
@@ -68,6 +84,12 @@ export default class StarshipServices {
     const {
       chain, id, address, hash, type = TYPE_OBJ.sell, amount,
     } = req.body;
+
+    if (convertCheckSUM(hash) !== CONTRACT_CHECK) {
+      req.response = { errMess: 'contract invalid' };
+      return next();
+    }
+
     const findStartShipParticipantData: any = await StartShipParticipant.findOne({ id, chain, address });
 
     if (!findStartShipParticipantData) {
@@ -103,6 +125,8 @@ export default class StarshipServices {
       req.response = true;
       next();
     }
+
+    // check hash to === ''
   }
 
   static async listingAdmin(req, res, next) {
@@ -110,13 +134,18 @@ export default class StarshipServices {
     // slug gen from infomation.name by function
     // check slug exist if exist => show errMess slugExists
 
-    const { information } = req.body;
+    const { information, contract } = req.body;
+
+    if (convertCheckSUM(contract.address) !== CONTRACT_CHECK) {
+      req.response = { errMess: 'contract invalid' };
+      return next();
+    }
 
     const genSlug = createSlug(information.name);
     if (!genSlug) {
       return next();
     }
-    const findStartShipPadData = await StartShipPad.countDocuments({ slug: genSlug });
+    const findStartShipPadData: any = await StartShipPad.countDocuments({ slug: genSlug });
 
     if (findStartShipPadData) {
       req.response = { errMess: 'slugExists' };

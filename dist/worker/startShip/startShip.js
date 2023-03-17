@@ -18,10 +18,12 @@ exports.createSlug = void 0;
 const slug_1 = __importDefault(require("slug"));
 const StartShipPad_1 = __importDefault(require("../../model/startship/StartShipPad"));
 const StartShipParticipant_1 = __importDefault(require("../../model/startship/StartShipParticipant"));
+const function_1 = require("../../common/function");
 const TYPE_OBJ = {
     sell: 'sell',
     claim: 'claim',
 };
+const CONTRACT_CHECK = '0x7B11a60E3Fbe021dD3faa48B49598B7Ff0C667A4';
 const createSlug = (text) => (0, slug_1.default)(text);
 exports.createSlug = createSlug;
 class StarshipServices {
@@ -30,14 +32,23 @@ class StarshipServices {
     // stashipPad
     static explore(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { page = 1, size = 10 } = req.query;
-            const statShipPadData = yield StartShipPad_1.default.find({}).sort({ createdAt: -1 })
+            const { page = 1, size = 10, key = '', } = req.query;
+            const statShipPadData = yield StartShipPad_1.default.find({
+                $or: [
+                    { 'information.name': { $regex: key, $options: 'i' } },
+                    { 'information.description': { $regex: key, $options: 'i' } },
+                ],
+            }).sort({ createdAt: -1, 'token0.price': -1, 'token1.price': -1 })
                 .skip((parseInt(page) - 1) * parseInt(size)).limit(parseInt(size))
                 .lean();
-            req.response = statShipPadData;
+            req.response = {
+                length: statShipPadData.length,
+                statShipPadData,
+            };
             next();
         });
     }
+    // search key words, sort by (time, price)
     // stashipPad
     // get Find One
     static getDetailBySlug(req, res, next) {
@@ -67,6 +78,7 @@ class StarshipServices {
             });
             req.response = true;
             next();
+            //
         });
     }
     static logRecord(req, res, next) {
@@ -78,6 +90,10 @@ class StarshipServices {
             // type Claim check old Claimed Data if exist data => errMess: alreadyClaim
             // type Sell update data sell push hash and amount=>update
             const { chain, id, address, hash, type = TYPE_OBJ.sell, amount, } = req.body;
+            if ((0, function_1.convertCheckSUM)(hash) !== CONTRACT_CHECK) {
+                req.response = { errMess: 'contract invalid' };
+                return next();
+            }
             const findStartShipParticipantData = yield StartShipParticipant_1.default.findOne({ id, chain, address });
             if (!findStartShipParticipantData) {
                 req.response = { errMess: 'notRegister' };
@@ -108,6 +124,7 @@ class StarshipServices {
                 req.response = true;
                 next();
             }
+            // check hash to === ''
         });
     }
     static listingAdmin(req, res, next) {
@@ -115,8 +132,11 @@ class StarshipServices {
             // create StashipPad
             // slug gen from infomation.name by function
             // check slug exist if exist => show errMess slugExists
-            const { information } = req.body;
-            console.log('🚀 ~ file: startShip.ts:114 ~ StarshipServices ~ listingAdmin ~ information:', information);
+            const { information, contract } = req.body;
+            if ((0, function_1.convertCheckSUM)(contract.address) !== CONTRACT_CHECK) {
+                req.response = { errMess: 'contract invalid' };
+                return next();
+            }
             const genSlug = (0, exports.createSlug)(information.name);
             if (!genSlug) {
                 return next();

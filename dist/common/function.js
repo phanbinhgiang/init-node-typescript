@@ -3,13 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CommonServices = exports.checkJSon = exports.validateEmailRule = exports.countDots = exports.lowerCase = exports.convertToMongoID = exports.genSkipNum = exports.getLength = void 0;
+exports.convertCheckSUM = exports.CommonServices = exports.checkJSon = exports.validateEmailRule = exports.countDots = exports.lowerCase = exports.convertToMongoID = exports.genSkipNum = exports.getLength = void 0;
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-useless-escape */
 /* eslint-disable arrow-body-style */
 /* eslint-disable max-len */
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const mailchecker_1 = __importDefault(require("mailchecker"));
 const mongoose_1 = __importDefault(require("mongoose"));
+const web3_1 = __importDefault(require("web3"));
 const index_1 = require("../worker/function/index");
 const getLength = (value) => (value ? value.length : 0);
 exports.getLength = getLength;
@@ -143,4 +145,14 @@ class CommonServices {
 }
 exports.CommonServices = CommonServices;
 exports.default = exports.getLength;
+const convertCheckSUM = (address) => {
+    const web3 = new web3_1.default();
+    try {
+        return address ? web3.utils.toChecksumAddress(address) : address;
+    }
+    catch (error) {
+        return null;
+    }
+};
+exports.convertCheckSUM = convertCheckSUM;
 //# sourceMappingURL=function.js.map

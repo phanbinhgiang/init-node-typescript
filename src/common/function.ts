@@ -1,9 +1,11 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-useless-escape */
 /* eslint-disable arrow-body-style */
 /* eslint-disable max-len */
 import jwt from 'jsonwebtoken';
 import MailChecker from 'mailchecker';
 import mongoose from 'mongoose';
+import Web3 from 'web3';
 import { getStorage } from '../worker/function/index';
 
 export const getLength = (value: any): number => (value ? value.length : 0);
@@ -149,3 +151,12 @@ export class CommonServices {
 }
 
 export default getLength;
+
+export const convertCheckSUM = (address: string): string => {
+  const web3 = new Web3();
+  try {
+    return address ? web3.utils.toChecksumAddress(address) : address;
+  } catch (error) {
+    return null;
+  }
+};

@@ -1,9 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable max-len */
 import { Response, NextFunction } from 'express';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import { RequestCustom } from '../../middleware/constants';
-import DashboardData from '../../model/dashboardData/DashboardData';
+import DashboardData, { DashboardFiledResponse, DashboardInterface } from '../../model/dashboardData/DashboardData';
 import User from '../../model/user/User';
 import KYCVerify from '../../model/user/KYCVerify';
 import IPUser from '../../model/user/IPUser';
@@ -14,14 +14,15 @@ import {
 import AddressList from '../../model/addressList/AddressList';
 import DagoraHistory from '../../model/dagora/dagoraHistory';
 import AggregatorHistory from '../../model/aggregatorHistory/AggregatorHistory';
+import { getDataDashBoard } from '../function';
 
 export default class AnalyticSupperAppWorker {
   // DashBoard
   static async getTotalDashboardData(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date().getTime();
-    const to = moment(time);
-    const from = moment(time).subtract(14, 'day');
-    const dashboardData14days: any = await DashboardData.find({
+    const time: number = new Date('2022-07-23 17:00:00.000Z').getTime();
+    const to: Moment = moment(time);
+    const from: Moment = moment(time).subtract(14, 'day');
+    const dashboardData14days: DashboardInterface[] = await DashboardData.find({
       interval: 'day',
       startAt: {
         $gte: new Date(from.valueOf()),
@@ -39,27 +40,18 @@ export default class AnalyticSupperAppWorker {
       pointTotal: 1,
     }).sort({ startAt: -1 }).lean();
 
-    const getData = (type: string) => {
-      const totalData7days = dashboardData14days.slice(0, 7).reduce((total, item: any) => total + (item?.[type] || 0), 0);
-      const totalData7daysBefore = dashboardData14days.slice(7).reduce((total, item: any) => total + (item?.[type] || 0), 0);
-      return {
-        total: totalData7days,
-        percent: totalData7daysBefore ? ((totalData7days - totalData7daysBefore) / totalData7daysBefore) * 100 : 0,
-      };
-    };
-
     req.response = {
       newUser: {
-        total: getData('userNew').total,
-        percent: getData('userNew').percent,
+        total: getDataDashBoard('userNew', dashboardData14days).total,
+        percent: getDataDashBoard('userNew', dashboardData14days).percent,
       },
       newWallet: {
-        total: getData('addressNew').total,
-        percent: getData('addressNew').percent,
+        total: getDataDashBoard('addressNew', dashboardData14days).total,
+        percent: getDataDashBoard('addressNew', dashboardData14days).percent,
       },
       swapVolume: {
-        total: getData('swapVolume').total,
-        percent: getData('swapVolume').percent,
+        total: getDataDashBoard('swapVolume', dashboardData14days).total,
+        percent: getDataDashBoard('swapVolume', dashboardData14days).percent,
       },
 
       // revenue : ....
@@ -75,14 +67,46 @@ export default class AnalyticSupperAppWorker {
   }
 
   static async getChartDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date().getTime();
-    const { type, chart } = req.query;
+    const time: number = new Date('2022-07-23 17:00:00.000Z').getTime();
+    const { type = 'week', chart } = req.query;
 
     const { matchTime, interval } = getQueryChart(type, time);
 
-    const dataResponse = getFiledDataDashboardResponse(chart);
+    let dataResponse: DashboardFiledResponse;
+    switch (chart) {
+    // chart dashboard
+      case 'user':
+        dataResponse = {
+          _id: 0,
+          userTotal: 1,
+          userActive: 1,
+          userNew: 1,
+          startAt: 1,
+        };
+        break;
+      case 'address':
+        dataResponse = {
+          _id: 0,
+          addressTotal: 1,
+          // addressActive: 1, //????
+          addressNew: 1,
+          startAt: 1,
+        };
+        break;
+      case 'xpoint':
+        dataResponse = {
+          _id: 0,
+          pointNew: 1,
+          pointTotal: 1,
+          startAt: 1,
+        };
+        break;
 
-    const dashboardData: any = await DashboardData.find({
+      default:
+        break;
+    }
+
+    const dashboardData: DashboardInterface[] = await DashboardData.find({
       interval,
       startAt: matchTime,
     }, dataResponse).sort({ startAt: 1 }).lean();
@@ -93,9 +117,9 @@ export default class AnalyticSupperAppWorker {
 
   // User
   static async getUserDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date().getTime();
+    const time: number = new Date().getTime();
     const { type } = req.query;
-    const matchTime = getMatchTime(type, time);
+    const { matchTime } = getQueryChart(type, time);
     const userDataTotalPromise = User.countDocuments({
       createdAt: matchTime,
     }).lean();
@@ -115,9 +139,9 @@ export default class AnalyticSupperAppWorker {
   }
 
   static async getPopularCountries(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date().getTime();
+    const time: number = new Date().getTime();
     const { type } = req.query;
-    const matchTime = getMatchTime(type, time);
+    const { matchTime } = getQueryChart(type, time);
     const dataCountries = await IPUser.aggregate([
       {
         $match: {
@@ -130,17 +154,22 @@ export default class AnalyticSupperAppWorker {
           total: { $sum: 1 },
         },
       },
+      {
+        $sort: {
+          total: -1,
+        },
+      },
     ]);
 
     const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
     const dataRes = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
-    req.response = dataRes.sort((a, b) => a.percent - b.percent);
+    req.response = dataRes;
 
     next();
   }
 
   static async getDeviceDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date().getTime();
+    const time: number = new Date().getTime();
     const { type } = req.query;
     const to: any = moment(time);
     let from;

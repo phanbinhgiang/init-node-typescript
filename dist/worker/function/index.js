@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchCacheRedis = exports.fetchCacheRedisLocal = exports.updateCacheRedislocal = exports.getFiledDataDashboardResponse = exports.getQueryChart = exports.getMatchTime = exports.getQueryTimeArray = exports.saveStorage = exports.getStorage = exports.deleteStore = exports.onlyUnique = exports.createSlug = exports.genSkipNum = exports.getLength = exports.genUpdate = void 0;
+exports.getDataDashBoard = exports.fetchCacheRedis = exports.fetchCacheRedisLocal = exports.updateCacheRedislocal = exports.getFiledDataDashboardResponse = exports.getQueryChart = exports.getMatchTime = exports.getQueryTimeArray = exports.saveStorage = exports.getStorage = exports.deleteStore = exports.onlyUnique = exports.createSlug = exports.genSkipNum = exports.getLength = exports.genUpdate = void 0;
 /* eslint-disable max-len */
 /* eslint-disable consistent-return */
 /* eslint-disable default-param-last */
@@ -135,6 +135,21 @@ const getQueryChart = (type, time) => {
     let matchTime;
     let interval;
     switch (type) {
+        case 'day':
+            interval = 'day';
+            from = (0, moment_1.default)(time).subtract(7, 'day');
+            matchTime = {
+                $gte: new Date(from.valueOf()),
+                $lt: new Date(to.valueOf()),
+            };
+            break;
+        case 'week':
+            from = (0, moment_1.default)(time).subtract(7, 'day');
+            matchTime = {
+                $gte: new Date(from.valueOf()),
+                $lt: new Date(to.valueOf()),
+            };
+            break;
         case 'month':
             interval = 'day';
             from = (0, moment_1.default)(time).subtract(1, 'month');
@@ -150,12 +165,6 @@ const getQueryChart = (type, time) => {
             };
             break;
         default:
-            interval = 'day';
-            from = (0, moment_1.default)(time).subtract(7, 'day');
-            matchTime = {
-                $gte: new Date(from.valueOf()),
-                $lt: new Date(to.valueOf()),
-            };
             break;
     }
     return { matchTime, interval };
@@ -289,4 +298,13 @@ const fetchCacheRedis = (key, req, next, time = 30000, func) => __awaiter(void 0
     });
 });
 exports.fetchCacheRedis = fetchCacheRedis;
+const getDataDashBoard = (type, dashboardData14days) => {
+    const totalData7days = dashboardData14days.slice(0, 7).reduce((total, item) => total + ((item === null || item === void 0 ? void 0 : item[type]) || 0), 0);
+    const totalData7daysBefore = dashboardData14days.slice(7).reduce((total, item) => total + ((item === null || item === void 0 ? void 0 : item[type]) || 0), 0);
+    return {
+        total: totalData7days,
+        percent: totalData7daysBefore ? ((totalData7days - totalData7daysBefore) / totalData7daysBefore) * 100 : 0,
+    };
+};
+exports.getDataDashBoard = getDataDashBoard;
 //# sourceMappingURL=index.js.map

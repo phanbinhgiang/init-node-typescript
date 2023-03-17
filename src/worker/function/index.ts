@@ -7,10 +7,11 @@
 /* eslint-disable import/prefer-default-export */
 import slug from 'slug';
 import { createClient } from 'redis';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import get from 'lodash/get';
 import { checkJSon } from '../../common/function';
 import { DurationTime } from '../dagora/dagoraHistory';
+import { DashboardInterface } from '../../model/dashboardData/DashboardData';
 
 export const genUpdate = (data: object, arrValue: string[]) : any => {
   const genObject = {};
@@ -119,13 +120,30 @@ export const getMatchTime = (type, time) => {
   return matchTime;
 };
 
-export const getQueryChart = (type, time) => {
-  const to = moment(time);
-  let from;
+export const getQueryChart = (type: string, time: number) => {
+  const to: Moment = moment(time);
+  let from: Moment;
   let matchTime;
-  let interval;
+  let interval: string;
 
   switch (type) {
+    case 'day':
+      interval = 'day';
+      from = moment(time).subtract(7, 'day');
+      matchTime = {
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
+      };
+      break;
+
+    case 'week':
+      from = moment(time).subtract(7, 'day');
+      matchTime = {
+        $gte: new Date(from.valueOf()),
+        $lt: new Date(to.valueOf()),
+      };
+      break;
+
     case 'month':
       interval = 'day';
       from = moment(time).subtract(1, 'month');
@@ -143,12 +161,6 @@ export const getQueryChart = (type, time) => {
       break;
 
     default:
-      interval = 'day';
-      from = moment(time).subtract(7, 'day');
-      matchTime = {
-        $gte: new Date(from.valueOf()),
-        $lt: new Date(to.valueOf()),
-      };
       break;
   }
 
@@ -288,4 +300,13 @@ export const fetchCacheRedis = async (key, req, next, time = 30000, func) => {
   }).catch(() => {
     next();
   });
+};
+
+export const getDataDashBoard = (type: string, dashboardData14days: DashboardInterface[]) => {
+  const totalData7days = dashboardData14days.slice(0, 7).reduce((total, item: any) => total + (item?.[type] || 0), 0);
+  const totalData7daysBefore = dashboardData14days.slice(7).reduce((total, item: any) => total + (item?.[type] || 0), 0);
+  return {
+    total: totalData7days,
+    percent: totalData7daysBefore ? ((totalData7days - totalData7daysBefore) / totalData7daysBefore) * 100 : 0,
+  };
 };
