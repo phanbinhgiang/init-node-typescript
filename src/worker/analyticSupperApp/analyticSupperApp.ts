@@ -229,9 +229,9 @@ export default class AnalyticSupperAppWorker {
   // Wallet
   static async getWalletDashboard(req: RequestCustom, res: Response, next: NextFunction) {
     // return: wallet User( total, percent), total wallet created (total, percent), total wallet, total transfer volume, total transfer transaction
-    const time: number = new Date().getTime();
-    const to = moment(time);
-    const from = moment(time).subtract(14, 'day');
+    const time: number = new Date('2022-07-23 17:00:00.000Z').getTime();
+    const to : Moment = moment(time);
+    const from: Moment = moment(time).subtract(14, 'day');
 
     const dashboardData14daysPromise: any = DashboardData.find({
       interval: 'day',
@@ -303,9 +303,10 @@ export default class AnalyticSupperAppWorker {
   }
 
   static async getWalletCreateNewAndRestore(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date().getTime();
+    const time: number = new Date().getTime();
     const { type } = req.query;
-    const matchTime = getMatchTime(type, time);
+    const { matchTime } = getQueryChart(type, time);
+
     const createNewTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 } }).lean();
     const createNewMultiTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 }, isMulti: false }).lean();
     const createNewSingleChainDetailPromise = AddressList.aggregate([
@@ -367,7 +368,7 @@ export default class AnalyticSupperAppWorker {
   }
 
   static async getDetailTransaction(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date().getTime();
+    const time: number = new Date('2023-01-11 18:52:28.541Z').getTime();
     const { type, limit = 10, page = 1 } = req.query;
 
     const { matchTime } = getQueryChart(type, time);
@@ -412,7 +413,7 @@ export default class AnalyticSupperAppWorker {
 
   // Swap dashboard
   static async getSwapDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time = new Date().getTime();
+    const time = new Date('2022-07-23 17:00:00.000Z').getTime();
     const to = moment(time);
     const from = moment(time).subtract(14, 'day');
 
@@ -667,7 +668,7 @@ export default class AnalyticSupperAppWorker {
 
     const dataResponse = getFiledDataDashboardResponse(chart);
 
-    const dashboardData: any = await DashboardData.find({
+    const dashboardData: DashboardInterface[] = await DashboardData.find({
       interval,
       startAt: matchTime,
     }, dataResponse).sort({ startAt: 1 }).lean();

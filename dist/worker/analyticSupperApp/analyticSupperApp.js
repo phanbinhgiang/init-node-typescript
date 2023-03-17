@@ -219,7 +219,7 @@ class AnalyticSupperAppWorker {
     static getWalletDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             // return: wallet User( total, percent), total wallet created (total, percent), total wallet, total transfer volume, total transfer transaction
-            const time = new Date().getTime();
+            const time = new Date('2022-07-23 17:00:00.000Z').getTime();
             const to = (0, moment_1.default)(time);
             const from = (0, moment_1.default)(time).subtract(14, 'day');
             const dashboardData14daysPromise = DashboardData_1.default.find({
@@ -287,7 +287,7 @@ class AnalyticSupperAppWorker {
         return __awaiter(this, void 0, void 0, function* () {
             const time = new Date().getTime();
             const { type } = req.query;
-            const matchTime = (0, index_1.getMatchTime)(type, time);
+            const { matchTime } = (0, index_1.getQueryChart)(type, time);
             const createNewTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 } }).lean();
             const createNewMultiTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 }, isMulti: false }).lean();
             const createNewSingleChainDetailPromise = AddressList_1.default.aggregate([
@@ -347,7 +347,7 @@ class AnalyticSupperAppWorker {
     }
     static getDetailTransaction(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date().getTime();
+            const time = new Date('2023-01-11 18:52:28.541Z').getTime();
             const { type, limit = 10, page = 1 } = req.query;
             const { matchTime } = (0, index_1.getQueryChart)(type, time);
             const dagoraHistoryData = yield dagoraHistory_1.default.aggregate([
@@ -393,7 +393,7 @@ class AnalyticSupperAppWorker {
     static getSwapDashboard(req, res, next) {
         var _a, _b, _c, _d;
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date().getTime();
+            const time = new Date('2022-07-23 17:00:00.000Z').getTime();
             const to = (0, moment_1.default)(time);
             const from = (0, moment_1.default)(time).subtract(14, 'day');
             const { chain = 'all' } = req.query;
