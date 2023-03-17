@@ -12,6 +12,6 @@ router.use('/report', report);
 router.use('/knowledge', knowledge);
 router.use('/dapps', dapps);
 router.use('/analytic', analyticSupperApp);
-router.use('/start', startShip);
+router.use('/starship', startShip);
 
 export default router;

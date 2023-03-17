@@ -32,19 +32,18 @@ class StarshipServices {
     // stashipPad
     static explore(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { page = 1, size = 10, key = '', } = req.query;
-            const statShipPadData = yield StartShipPad_1.default.find({
+            const { page = 1, size = 10, key, } = req.query;
+            const matchFind = key ? {
                 $or: [
                     { 'information.name': { $regex: key, $options: 'i' } },
                     { 'information.description': { $regex: key, $options: 'i' } },
                 ],
-            }).sort({ createdAt: -1, 'token0.price': -1, 'token1.price': -1 })
+            } : {};
+            const statShipPadData = yield StartShipPad_1.default.find(matchFind)
+                .sort({ createdAt: -1, 'token0.price': -1, 'token1.price': -1 })
                 .skip((parseInt(page) - 1) * parseInt(size)).limit(parseInt(size))
                 .lean();
-            req.response = {
-                length: statShipPadData.length,
-                statShipPadData,
-            };
+            req.response = statShipPadData;
             next();
         });
     }
@@ -147,6 +146,40 @@ class StarshipServices {
                 return next();
             }
             yield StartShipPad_1.default.create(Object.assign(Object.assign({}, req.body), { slug: genSlug }));
+            req.response = true;
+            next();
+        });
+    }
+    static update(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { information } = req.body;
+            const genSlug = (0, exports.createSlug)(information.name);
+            if (!genSlug) {
+                return next();
+            }
+            const findStartShipPadData = yield StartShipPad_1.default.findOne({ slug: genSlug });
+            if (!findStartShipPadData) {
+                req.response = { errMess: 'not found document' };
+                return next();
+            }
+            yield findStartShipPadData.update(req.body);
+            req.response = true;
+            next();
+        });
+    }
+    static delete(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { slug: genSlug } = req.params;
+            const findStartShipPadData = yield StartShipPad_1.default.findOne({ slug: genSlug });
+            if (!findStartShipPadData) {
+                req.response = { errMess: 'not found document' };
+                return next();
+            }
+            if (!findStartShipPadData.isActive) {
+                req.response = { errMess: 'document is deleted' };
+                return next();
+            }
+            yield findStartShipPadData.update({ isActive: false });
             req.response = true;
             next();
         });

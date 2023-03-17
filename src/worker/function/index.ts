@@ -63,7 +63,7 @@ export const saveStorage = (key: string, value: any) => {
   clientRedis.set(key, newValue);
 };
 
-export const getQueryTimeArray = (from: string, to: string, type: any) => {
+export const getQueryTimeArray = (from: any, to: any, type: any) => {
   const getListTimeArray = (startTime: any, endTime: any, typeTime: any) => {
     const listTime: DurationTime[] = [];
     for (let i = startTime; i < endTime; i.add(1, typeTime)) {

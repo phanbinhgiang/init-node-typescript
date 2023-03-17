@@ -12,5 +12,7 @@ router.use('/explore/:id', startShip_1.default.getDetailBySlug);
 router.use('/register', startShip_1.default.register);
 router.use('/log', startShip_1.default.logRecord);
 router.use('/listing', startShip_1.default.listingAdmin);
+router.use('/update', startShip_1.default.update);
+router.use('/delete/:slug', startShip_1.default.delete);
 exports.default = router;
 //# sourceMappingURL=index.js.map

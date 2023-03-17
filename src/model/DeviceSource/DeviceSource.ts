@@ -8,4 +8,16 @@ export default createSchema({
   source: defaultModel.string,
   os: defaultModel.string,
   isActive: defaultModel.boolean,
+  createdAt: defaultModel.date,
 }, 'DeviceSource', null, null);
+
+export interface DeviceSourceInterface {
+  id: string,
+  createdUser: string[],
+  lastSync: Date,
+  numSync: number,
+  source: string,
+  os: string,
+  isActive: boolean,
+  createdAt: Date,
+}

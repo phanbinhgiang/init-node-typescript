@@ -9,5 +9,6 @@ exports.default = (0, __1.createSchema)({
     source: __1.defaultModel.string,
     os: __1.defaultModel.string,
     isActive: __1.defaultModel.boolean,
+    createdAt: __1.defaultModel.date,
 }, 'DeviceSource', null, null);
 //# sourceMappingURL=DeviceSource.js.map

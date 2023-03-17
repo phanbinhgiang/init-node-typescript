@@ -9,5 +9,7 @@ router.use('/explore/:id', StartShipWorker.getDetailBySlug);
 router.use('/register', StartShipWorker.register);
 router.use('/log', StartShipWorker.logRecord);
 router.use('/listing', StartShipWorker.listingAdmin);
+router.use('/update', StartShipWorker.update);
+router.use('/delete/:slug', StartShipWorker.delete);
 
 export default router;

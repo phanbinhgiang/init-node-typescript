@@ -7,7 +7,7 @@ import DashboardData, { DashboardFiledResponse, DashboardInterface } from '../..
 import User from '../../model/user/User';
 import KYCVerify from '../../model/user/KYCVerify';
 import IPUser from '../../model/user/IPUser';
-import DeviceSource from '../../model/DeviceSource/DeviceSource';
+import DeviceSource, { DeviceSourceInterface } from '../../model/DeviceSource/DeviceSource';
 import {
   getMatchTime, getQueryTimeArray, getQueryChart, getFiledDataDashboardResponse,
 } from '../function/index';
@@ -15,6 +15,7 @@ import AddressList from '../../model/addressList/AddressList';
 import DagoraHistory from '../../model/dagora/dagoraHistory';
 import AggregatorHistory from '../../model/aggregatorHistory/AggregatorHistory';
 import { getDataDashBoard } from '../function';
+import { DurationTime } from '../dagora/dagoraHistory';
 
 export default class AnalyticSupperAppWorker {
   // DashBoard
@@ -171,9 +172,9 @@ export default class AnalyticSupperAppWorker {
   static async getDeviceDashboard(req: RequestCustom, res: Response, next: NextFunction) {
     const time: number = new Date().getTime();
     const { type } = req.query;
-    const to: any = moment(time);
-    let from;
-    let arrQueryTime;
+    const to: Moment = moment(time);
+    let from: Moment;
+    let arrQueryTime: DurationTime[];
 
     switch (type) {
       case 'week':
@@ -207,12 +208,12 @@ export default class AnalyticSupperAppWorker {
         break;
     }
 
-    const deviceSourceData = await DeviceSource.find({
+    const deviceSourceData: DeviceSourceInterface[] = await DeviceSource.find({
       createdAt: { $gte: arrQueryTime[0]?.start, $lte: arrQueryTime[arrQueryTime.length - 1]?.end },
     }, { _id: 0, os: 1, createdAt: 1 }).lean();
 
     const getTotalData = (start: Date, end: Date, os: string) : number => deviceSourceData.filter(
-      (item: any) => item.createdAt >= start && item.createdAt <= end && item.os === os,
+      (item) => item.createdAt >= start && item.createdAt <= end && item.os === os,
     ).length;
 
     const dataResponse = arrQueryTime.map((item) => ({
@@ -228,7 +229,7 @@ export default class AnalyticSupperAppWorker {
   // Wallet
   static async getWalletDashboard(req: RequestCustom, res: Response, next: NextFunction) {
     // return: wallet User( total, percent), total wallet created (total, percent), total wallet, total transfer volume, total transfer transaction
-    const time = new Date().getTime();
+    const time: number = new Date().getTime();
     const to = moment(time);
     const from = moment(time).subtract(14, 'day');
 

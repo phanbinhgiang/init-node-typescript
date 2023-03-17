@@ -20,20 +20,20 @@ export default class StarshipServices {
   // stashipPad
   static async explore(req, res, next) {
     const {
-      page = 1, size = 10, key = '',
+      page = 1, size = 10, key,
     } = req.query;
-    const statShipPadData = await StartShipPad.find({
+
+    const matchFind = key ? {
       $or: [
         { 'information.name': { $regex: key, $options: 'i' } },
         { 'information.description': { $regex: key, $options: 'i' } },
       ],
-    }).sort({ createdAt: -1, 'token0.price': -1, 'token1.price': -1 })
+    } : {};
+    const statShipPadData = await StartShipPad.find(matchFind)
+      .sort({ createdAt: -1, 'token0.price': -1, 'token1.price': -1 })
       .skip((parseInt(page) - 1) * parseInt(size)).limit(parseInt(size))
       .lean();
-    req.response = {
-      length: statShipPadData.length,
-      statShipPadData,
-    };
+    req.response = statShipPadData;
     next();
   }
   // search key words, sort by (time, price)
@@ -153,6 +153,45 @@ export default class StarshipServices {
     }
 
     await StartShipPad.create({ ...req.body, slug: genSlug });
+    req.response = true;
+    next();
+  }
+
+  static async update(req, res, next) {
+    const { information } = req.body;
+
+    const genSlug = createSlug(information.name);
+    if (!genSlug) {
+      return next();
+    }
+    const findStartShipPadData = await StartShipPad.findOne({ slug: genSlug });
+
+    if (!findStartShipPadData) {
+      req.response = { errMess: 'not found document' };
+      return next();
+    }
+
+    await findStartShipPadData.update(req.body);
+    req.response = true;
+    next();
+  }
+
+  static async delete(req, res, next) {
+    const { slug: genSlug } = req.params;
+
+    const findStartShipPadData: any = await StartShipPad.findOne({ slug: genSlug });
+
+    if (!findStartShipPadData) {
+      req.response = { errMess: 'not found document' };
+      return next();
+    }
+
+    if (!findStartShipPadData.isActive) {
+      req.response = { errMess: 'document is deleted' };
+      return next();
+    }
+
+    await findStartShipPadData.update({ isActive: false });
     req.response = true;
     next();
   }

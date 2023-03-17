@@ -37,6 +37,7 @@ export default createSchema({
 }, 'DashboardData', null, null);
 
 export interface DashboardInterface {
+  _id?: string;
   id?: string,
   interval?: string,
   startAt?: Date,

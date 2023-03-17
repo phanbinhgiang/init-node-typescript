@@ -16,6 +16,6 @@ router.use('/report', amberReport_1.default);
 router.use('/knowledge', knowledge_1.default);
 router.use('/dapps', dapps_1.default);
 router.use('/analytic', analyticSupperApp_1.default);
-router.use('/start', startShip_1.default);
+router.use('/starship', startShip_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map
