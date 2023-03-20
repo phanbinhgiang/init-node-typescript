@@ -9,11 +9,14 @@ export default createSchema({
     logo: defaultModelNew.sString,
     name: defaultModelNew.sString,
     description: defaultModelNew.sString,
+    fundraiseGoal: defaultModelNew.sString,
+
   },
   content: defaultModelNew.sString,
   token0: {
     address: { type: String, required: true },
     price: defaultModelNew.number,
+    symbol: defaultModelNew.sString,
   },
   token1: {
     address: { type: String, required: true },

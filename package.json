@@ -45,11 +45,11 @@
     "mongoose": "^6.8.0",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.20",
-    "notification": "/Users/giangphan/Documents/coin98-notification",
     "query-string": "^6.8.3",
     "slug": "^8.2.2",
     "swagger-ui-express": "^4.6.0",
     "underscore": "^1.13.6",
+    "web3": "^1.8.2",
     "yamljs": "^0.3.0"
   }
 }

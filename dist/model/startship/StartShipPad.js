@@ -10,11 +10,13 @@ exports.default = (0, __1.createSchema)({
         logo: __1.defaultModelNew.sString,
         name: __1.defaultModelNew.sString,
         description: __1.defaultModelNew.sString,
+        fundraiseGoal: __1.defaultModelNew.sString,
     },
     content: __1.defaultModelNew.sString,
     token0: {
         address: { type: String, required: true },
         price: __1.defaultModelNew.number,
+        symbol: __1.defaultModelNew.sString,
     },
     token1: {
         address: { type: String, required: true },

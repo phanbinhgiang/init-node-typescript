@@ -4,6 +4,8 @@ import slug from 'slug';
 import StartShipPad from '../../model/startship/StartShipPad';
 import StartShipParticipant from '../../model/startship/StartShipParticipant';
 import { convertCheckSUM } from '../../common/function';
+import { genUpdate } from '../function';
+import EVMServices from '../../service/evm/evmService';
 
 const TYPE_OBJ = {
   sell: 'sell',
@@ -43,6 +45,10 @@ export default class StarshipServices {
   static async getDetailBySlug(req, res, next) {
     const { id } = req.params;
     const findStatShipPadData = await StartShipPad.findOne({ slug: id }).lean();
+    if (!findStatShipPadData) {
+      req.response = { errMess: `document not found with slug: ${id}` };
+      return next();
+    }
     req.response = findStatShipPadData;
     next();
   }
@@ -85,8 +91,14 @@ export default class StarshipServices {
       chain, id, address, hash, type = TYPE_OBJ.sell, amount,
     } = req.body;
 
-    if (convertCheckSUM(hash) !== CONTRACT_CHECK) {
-      req.response = { errMess: 'contract invalid' };
+    const detailTxs = await EVMServices.getTxsByHash(chain, hash);
+    if (!detailTxs) {
+      req.response = { errMess: 'TxsNotFound' };
+      return next();
+    }
+
+    if (convertCheckSUM(detailTxs.to) !== CONTRACT_CHECK) {
+      req.response = { errMess: 'contractInvalid' };
       return next();
     }
 
@@ -137,7 +149,7 @@ export default class StarshipServices {
     const { information, contract } = req.body;
 
     if (convertCheckSUM(contract.address) !== CONTRACT_CHECK) {
-      req.response = { errMess: 'contract invalid' };
+      req.response = { errMess: 'contractInvalid' };
       return next();
     }
 
@@ -158,36 +170,41 @@ export default class StarshipServices {
   }
 
   static async update(req, res, next) {
-    const { information } = req.body;
+    const { id } = req.body;
 
-    const genSlug = createSlug(information.name);
-    if (!genSlug) {
-      return next();
+    const updatedFiled = genUpdate(req.body, ['hash', 'chainId', 'information', 'content', 'token0', 'token1', 'contract', 'date', 'status', 'social', 'isPrivate', 'whitelist', 'isActive']);
+    const { information } = updatedFiled;
+    if (information) {
+      const genSlug = createSlug(information.name);
+      const countSlugExists = await StartShipPad.countDocuments({ slug: genSlug, _id: { $ne: id } });
+      if (countSlugExists) {
+        req.response = { errMess: 'slugExists' };
+        return next();
+      }
     }
-    const findStartShipPadData = await StartShipPad.findOne({ slug: genSlug });
-
-    if (!findStartShipPadData) {
-      req.response = { errMess: 'not found document' };
-      return next();
-    }
-
-    await findStartShipPadData.update(req.body);
-    req.response = true;
-    next();
+    StartShipPad.findOneAndUpdate({ _id: id }, updatedFiled, { new: true }, (err, result) => {
+      if (!err || result) {
+        req.response = result;
+        next();
+      } else {
+        req.response = false;
+        next();
+      }
+    });
   }
 
   static async delete(req, res, next) {
-    const { slug: genSlug } = req.params;
+    const { id } = req.params;
 
-    const findStartShipPadData: any = await StartShipPad.findOne({ slug: genSlug });
+    const findStartShipPadData: any = await StartShipPad.findOne({ _id: id });
 
     if (!findStartShipPadData) {
-      req.response = { errMess: 'not found document' };
+      req.response = { errMess: 'documentIdNotFound' };
       return next();
     }
 
     if (!findStartShipPadData.isActive) {
-      req.response = { errMess: 'document is deleted' };
+      req.response = { errMess: 'documentIsDeleted' };
       return next();
     }
 

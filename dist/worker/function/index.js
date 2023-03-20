@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDataDashBoard = exports.fetchCacheRedis = exports.fetchCacheRedisLocal = exports.updateCacheRedislocal = exports.getFiledDataDashboardResponse = exports.getQueryChart = exports.getMatchTime = exports.getQueryTimeArray = exports.saveStorage = exports.getStorage = exports.deleteStore = exports.onlyUnique = exports.createSlug = exports.genSkipNum = exports.getLength = exports.genUpdate = void 0;
+exports.getDataSingleChain = exports.getDataDashBoard = exports.fetchCacheRedis = exports.fetchCacheRedisLocal = exports.updateCacheRedislocal = exports.getQueryChart = exports.getQueryTimeArray = exports.saveStorage = exports.getStorage = exports.deleteStore = exports.onlyUnique = exports.createSlug = exports.genSkipNum = exports.getLength = exports.genUpdate = void 0;
 /* eslint-disable max-len */
 /* eslint-disable consistent-return */
 /* eslint-disable default-param-last */
@@ -94,41 +94,6 @@ const getQueryTimeArray = (from, to, type) => {
     return arrQueryTime;
 };
 exports.getQueryTimeArray = getQueryTimeArray;
-const getMatchTime = (type, time) => {
-    const to = (0, moment_1.default)(time);
-    let from;
-    let matchTime;
-    switch (type) {
-        case 'week':
-            from = (0, moment_1.default)(time).subtract(7, 'day');
-            matchTime = {
-                $gte: new Date(from.valueOf()),
-                $lt: new Date(to.valueOf()),
-            };
-            break;
-        case 'month':
-            from = (0, moment_1.default)(time).subtract(1, 'month');
-            matchTime = {
-                $gte: new Date(from.valueOf()),
-                $lt: new Date(to.valueOf()),
-            };
-            break;
-        case 'all':
-            matchTime = {
-                $lt: new Date(to.valueOf()),
-            };
-            break;
-        default:
-            from = (0, moment_1.default)(time).subtract(1, 'day');
-            matchTime = {
-                $gte: new Date(from.valueOf()),
-                $lt: new Date(to.valueOf()),
-            };
-            break;
-    }
-    return matchTime;
-};
-exports.getMatchTime = getMatchTime;
 const getQueryChart = (type, time) => {
     const to = (0, moment_1.default)(time);
     let from;
@@ -170,87 +135,6 @@ const getQueryChart = (type, time) => {
     return { matchTime, interval };
 };
 exports.getQueryChart = getQueryChart;
-const getFiledDataDashboardResponse = (chart) => {
-    let dataResponse;
-    switch (chart) {
-        // chart dashboard
-        case 'user':
-            dataResponse = {
-                _id: 0,
-                userTotal: 1,
-                userActive: 1,
-                userNew: 1,
-                startAt: 1,
-            };
-            break;
-        case 'address':
-            dataResponse = {
-                _id: 0,
-                addressTotal: 1,
-                addressActive: 1,
-                addressNew: 1,
-                startAt: 1,
-            };
-            break;
-        case 'xpoint':
-            dataResponse = {
-                _id: 0,
-                pointNew: 1,
-                pointTotal: 1,
-                startAt: 1,
-            };
-            break;
-        // chart wallet
-        case 'newWallet':
-            dataResponse = {
-                _id: 0,
-                addressNew: 1,
-                startAt: 1,
-            };
-            break;
-        case 'transferVolume':
-            dataResponse = {
-                _id: 0,
-                transactionVolume: 1,
-                transactionVolumeTotal: 1,
-                transactionVolumeSummary: 1,
-                startAt: 1,
-            };
-            break;
-        case 'transferTransaction':
-            dataResponse = {
-                _id: 0,
-                transactionCount: 1,
-                transactionCountTotal: 1,
-                transactionCountSummary: 1,
-                startAt: 1,
-            };
-            break;
-        //  chart swap
-        case 'swapVolume':
-            dataResponse = {
-                _id: 0,
-                swapVolume: 1,
-                swapVolumeTotal: 1,
-                swapVolumeSummary: 1,
-                startAt: 1,
-            };
-            break;
-        case 'swapTransaction':
-            dataResponse = {
-                _id: 0,
-                swapCount: 1,
-                swapCountTotal: 1,
-                swapCountSummary: 1,
-                startAt: 1,
-            };
-            break;
-        default:
-            break;
-    }
-    return dataResponse;
-};
-exports.getFiledDataDashboardResponse = getFiledDataDashboardResponse;
 const updateCacheRedislocal = (key, func, currentTime) => __awaiter(void 0, void 0, void 0, function* () {
     const payload = yield func();
     (0, exports.saveStorage)(key, JSON.stringify({ data: payload, time: currentTime }));
@@ -307,4 +191,13 @@ const getDataDashBoard = (type, dashboardData14days) => {
     };
 };
 exports.getDataDashBoard = getDataDashBoard;
+const getDataSingleChain = (type, dashboardData14days, chain) => {
+    const totalData7days = dashboardData14days.slice(0, 7).filter((item) => item === null || item === void 0 ? void 0 : item[type]).map((item) => item[type]).flat();
+    const data7daysChain = totalData7days.filter((item) => item.chain === chain).reduce((total, it) => total + (it.value || 0), 0);
+    const totalData7daysBefore = dashboardData14days.slice(7).filter((item) => item === null || item === void 0 ? void 0 : item[type]).map((item) => item[type]).flat();
+    const data7daysChainBefore = totalData7daysBefore.filter((item) => item.chain === chain).reduce((total, it) => total + (it.value || 0), 0);
+    const percent = data7daysChainBefore ? ((data7daysChain - data7daysChainBefore) / data7daysChainBefore) * 100 : 0;
+    return { total: data7daysChain, percent };
+};
+exports.getDataSingleChain = getDataSingleChain;
 //# sourceMappingURL=index.js.map
