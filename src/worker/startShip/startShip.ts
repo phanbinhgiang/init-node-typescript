@@ -64,6 +64,18 @@ export default class StarshipServices {
     const {
       chain, id, address, hash,
     } = req.body;
+
+    const detailTxs = await EVMServices.getTxsByHash(chain, hash);
+    if (!detailTxs) {
+      req.response = { errMess: 'TxsNotFound' };
+      return next();
+    }
+
+    if (convertCheckSUM(detailTxs.to) !== CONTRACT_CHECK) {
+      req.response = { errMess: 'contractInvalid' };
+      return next();
+    }
+
     const findStartShipParticipantData = await StartShipParticipant.countDocuments({ id, chain, address });
     if (findStartShipParticipantData) {
       req.response = { errMess: 'alreadyRegister' };
@@ -146,7 +158,9 @@ export default class StarshipServices {
     // slug gen from infomation.name by function
     // check slug exist if exist => show errMess slugExists
 
-    const { information, contract } = req.body;
+    const {
+      hash, chainId, information, content, token0, token1, contract, date, status, social, isPrivate, whitelist, isActive,
+    } = req.body;
 
     if (convertCheckSUM(contract.address) !== CONTRACT_CHECK) {
       req.response = { errMess: 'contractInvalid' };
@@ -164,7 +178,11 @@ export default class StarshipServices {
       return next();
     }
 
-    await StartShipPad.create({ ...req.body, slug: genSlug });
+    const newData = {
+      slug: genSlug, hash, chainId, information, content, token0, token1, contract, date, status, social, isPrivate, whitelist, isActive,
+    };
+
+    await StartShipPad.create(newData);
     req.response = true;
     next();
   }
