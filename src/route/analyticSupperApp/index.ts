@@ -4,13 +4,16 @@ import AnalyticSupperAppWorker from '../../worker/analyticSupperApp/analyticSupp
 const router = express.Router();
 
 // dashboard
-router.use('/app', AnalyticSupperAppWorker.getTotalDashboardData);
+router.use('/app/get', AnalyticSupperAppWorker.getTotalDashboardData);
 router.use('/app/chart', AnalyticSupperAppWorker.getChartDashboard);
+router.use('/app/cache', AnalyticSupperAppWorker.cacheTotalDashboardData);
 
 // user
-router.use('/app/user', AnalyticSupperAppWorker.getUserDashboard);
+router.use('/app/user/get', AnalyticSupperAppWorker.getUserDashboard);
+router.use('/app/user/cache', AnalyticSupperAppWorker.cacheUserDashboard);
 router.use('/app/user/country', AnalyticSupperAppWorker.getPopularCountries);
-router.use('/app/user/device', AnalyticSupperAppWorker.getDeviceDashboard);
+router.use('/app/user/device/get', AnalyticSupperAppWorker.getDeviceDashboard);
+router.use('/app/user/device/cache', AnalyticSupperAppWorker.cacheDeviceDashboard);
 
 // wallet
 router.use('/app/wallet', AnalyticSupperAppWorker.getWalletDashboard);

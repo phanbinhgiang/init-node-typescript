@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.TIME_CHARTS = void 0;
 const moment_1 = __importDefault(require("moment"));
 const DashboardData_1 = __importDefault(require("../../model/dashboardData/DashboardData"));
 const User_1 = __importDefault(require("../../model/user/User"));
@@ -24,9 +25,23 @@ const AddressList_1 = __importDefault(require("../../model/addressList/AddressLi
 const dagoraHistory_1 = __importDefault(require("../../model/dagora/dagoraHistory"));
 const AggregatorHistory_1 = __importDefault(require("../../model/aggregatorHistory/AggregatorHistory"));
 const function_1 = require("../function");
+exports.TIME_CHARTS = ['day', 'week', 'month', 'all'];
 class AnalyticSupperAppWorker {
     // DashBoard
     static getTotalDashboardData(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: 'dashboard-data' }, { _id: 0, data: 1 }).lean();
+            if (!recordDashboardData) {
+                req.response = {};
+                next();
+            }
+            else {
+                req.response = recordDashboardData.data;
+                next();
+            }
+        });
+    }
+    static cacheTotalDashboardData(req, res, next) {
         var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
             const time = new Date('2022-07-23 17:00:00.000Z').getTime();
@@ -49,7 +64,7 @@ class AnalyticSupperAppWorker {
                 startAt: 1,
                 pointTotal: 1,
             }).sort({ startAt: -1 }).lean();
-            req.response = {
+            const data = {
                 newUser: {
                     total: (0, function_1.getDataDashBoard)('userNew', dashboardData14days).total,
                     percent: (0, function_1.getDataDashBoard)('userNew', dashboardData14days).percent,
@@ -76,22 +91,23 @@ class AnalyticSupperAppWorker {
                 yield RecordCacheData_1.default.create({
                     id: 'dashboard-data',
                     time: new Date().getTime(),
-                    data: req.response,
+                    data,
                 });
             }
             else {
                 yield cacheDataDashBoard.updateOne({
                     time: new Date().getTime(),
-                    data: req.response,
+                    data,
                 });
             }
+            req.response = true;
             next();
         });
     }
     static getChartDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const time = new Date('2022-07-23 17:00:00.000Z').getTime();
-            const { type = 'week', chart } = req.query;
+            const { type = 'all', chart } = req.query;
             const { matchTime, interval } = (0, index_1.getQueryChart)(type, time);
             let dataResponse;
             switch (chart) {
@@ -130,42 +146,133 @@ class AnalyticSupperAppWorker {
                 startAt: matchTime,
             }, dataResponse).sort({ startAt: 1 }).lean();
             req.response = dashboardData;
-            const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: 'dashboard-data' });
-            if (!cacheDataDashBoard) {
-                yield RecordCacheData_1.default.create({
-                    id: 'dashboard-data',
-                    time: new Date().getTime(),
-                    data: req.response,
-                });
-            }
-            else {
-                yield cacheDataDashBoard.updateOne({
-                    time: new Date().getTime(),
-                    data: req.response,
-                });
-            }
             next();
         });
     }
     // User
     static getUserDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date().getTime();
-            const { type } = req.query;
-            const { matchTime } = (0, index_1.getQueryChart)(type, time);
-            const userDataTotalPromise = User_1.default.countDocuments({
-                createdAt: matchTime,
-            }).lean();
-            const userKCYPromise = KYCVerify_1.default.countDocuments({
-                createdAt: matchTime,
-                status: 'verified',
-            }).lean();
-            const [totalUser, kycUser] = yield Promise.all([userDataTotalPromise, userKCYPromise]);
-            req.response = {
-                totalUser,
-                newUser: totalUser - kycUser,
-                kycUser,
-            };
+            const { type = 'all' } = req.query;
+            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: `total-user-data-${type}` }, { _id: 0, data: 1 }).lean();
+            if (!recordDashboardData) {
+                req.response = {};
+                next();
+            }
+            else {
+                req.response = recordDashboardData.data;
+                next();
+            }
+        });
+    }
+    static cacheUserDashboard(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield Promise.all(exports.TIME_CHARTS.map((type) => __awaiter(this, void 0, void 0, function* () {
+                const time = new Date().getTime();
+                const { matchTime } = (0, index_1.getQueryChart)(type, time);
+                const userDataTotalPromise = User_1.default.countDocuments({
+                    createdAt: matchTime,
+                }).lean();
+                const userKCYPromise = KYCVerify_1.default.countDocuments({
+                    createdAt: matchTime,
+                    status: 'verified',
+                }).lean();
+                const [totalUser, kycUser] = yield Promise.all([userDataTotalPromise, userKCYPromise]);
+                const data = {
+                    totalUser,
+                    newUser: totalUser - kycUser,
+                    kycUser,
+                };
+                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `total-user-data-${type}` });
+                if (!cacheDataDashBoard) {
+                    yield RecordCacheData_1.default.create({
+                        id: `total-user-data-${type}`,
+                        time: new Date().getTime(),
+                        data,
+                    });
+                }
+                else {
+                    yield cacheDataDashBoard.updateOne({
+                        time: new Date().getTime(),
+                        data,
+                    });
+                }
+            })));
+            req.response = true;
+            next();
+        });
+    }
+    static getDeviceDashboard(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { type = 'all' } = req.query;
+            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: `devices-data-${type}` }, { _id: 0, data: 1 }).lean();
+            if (!recordDashboardData) {
+                req.response = {};
+                next();
+            }
+            else {
+                req.response = recordDashboardData.data;
+                next();
+            }
+        });
+    }
+    static cacheDeviceDashboard(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield Promise.all(exports.TIME_CHARTS.map((type) => __awaiter(this, void 0, void 0, function* () {
+                var _a, _b;
+                const time = new Date().getTime();
+                const to = (0, moment_1.default)(time);
+                let from;
+                let arrQueryTime;
+                switch (type) {
+                    case 'week':
+                        from = (0, moment_1.default)(time).subtract(7, 'day');
+                        arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'day').slice(1);
+                        break;
+                    case 'month':
+                        from = (0, moment_1.default)(time).subtract(1, 'month');
+                        arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'day').slice(1);
+                        break;
+                    case 'all':
+                        from = (0, moment_1.default)((yield DeviceSource_1.default.aggregate([
+                            {
+                                $group: {
+                                    _id: null,
+                                    minTime: { $min: '$createdAt' },
+                                },
+                            },
+                        ]))[0].minTime);
+                        arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'month');
+                        break;
+                    default:
+                        from = (0, moment_1.default)(time).subtract(1, 'day');
+                        arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'hour').slice(1);
+                        break;
+                }
+                const deviceSourceData = yield DeviceSource_1.default.find({
+                    createdAt: { $gte: (_a = arrQueryTime[0]) === null || _a === void 0 ? void 0 : _a.start, $lte: (_b = arrQueryTime[arrQueryTime.length - 1]) === null || _b === void 0 ? void 0 : _b.end },
+                }, { _id: 0, os: 1, createdAt: 1 }).lean();
+                const getTotalData = (start, end, os) => deviceSourceData.filter((item) => item.createdAt >= start && item.createdAt <= end && item.os === os).length;
+                const data = arrQueryTime.map((item) => ({
+                    time: item.start,
+                    ios: getTotalData(item.start, item.end, 'ios'),
+                    android: getTotalData(item.start, item.end, 'android'),
+                }));
+                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `devices-data-${type}` });
+                if (!cacheDataDashBoard) {
+                    yield RecordCacheData_1.default.create({
+                        id: `devices-data-${type}`,
+                        time: new Date().getTime(),
+                        data,
+                    });
+                }
+                else {
+                    yield cacheDataDashBoard.updateOne({
+                        time: new Date().getTime(),
+                        data,
+                    });
+                }
+            })));
+            req.response = true;
             next();
         });
     }
@@ -195,52 +302,6 @@ class AnalyticSupperAppWorker {
             const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
             const dataRes = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
             req.response = dataRes;
-            next();
-        });
-    }
-    static getDeviceDashboard(req, res, next) {
-        var _a, _b;
-        return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date().getTime();
-            const { type } = req.query;
-            const to = (0, moment_1.default)(time);
-            let from;
-            let arrQueryTime;
-            switch (type) {
-                case 'week':
-                    from = (0, moment_1.default)(time).subtract(7, 'day');
-                    arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'day').slice(1);
-                    break;
-                case 'month':
-                    from = (0, moment_1.default)(time).subtract(1, 'month');
-                    arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'day').slice(1);
-                    break;
-                case 'all':
-                    from = (0, moment_1.default)((yield DeviceSource_1.default.aggregate([
-                        {
-                            $group: {
-                                _id: null,
-                                minTime: { $min: '$createdAt' },
-                            },
-                        },
-                    ]))[0].minTime);
-                    arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'month');
-                    break;
-                default:
-                    from = (0, moment_1.default)(time).subtract(1, 'day');
-                    arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'hour').slice(1);
-                    break;
-            }
-            const deviceSourceData = yield DeviceSource_1.default.find({
-                createdAt: { $gte: (_a = arrQueryTime[0]) === null || _a === void 0 ? void 0 : _a.start, $lte: (_b = arrQueryTime[arrQueryTime.length - 1]) === null || _b === void 0 ? void 0 : _b.end },
-            }, { _id: 0, os: 1, createdAt: 1 }).lean();
-            const getTotalData = (start, end, os) => deviceSourceData.filter((item) => item.createdAt >= start && item.createdAt <= end && item.os === os).length;
-            const dataResponse = arrQueryTime.map((item) => ({
-                time: item.start,
-                ios: getTotalData(item.start, item.end, 'ios'),
-                android: getTotalData(item.start, item.end, 'android'),
-            }));
-            req.response = dataResponse;
             next();
         });
     }

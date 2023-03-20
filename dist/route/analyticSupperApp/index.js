@@ -7,12 +7,15 @@ const express_1 = __importDefault(require("express"));
 const analyticSupperApp_1 = __importDefault(require("../../worker/analyticSupperApp/analyticSupperApp"));
 const router = express_1.default.Router();
 // dashboard
-router.use('/app', analyticSupperApp_1.default.getTotalDashboardData);
+router.use('/app/get', analyticSupperApp_1.default.getTotalDashboardData);
 router.use('/app/chart', analyticSupperApp_1.default.getChartDashboard);
+router.use('/app/cache', analyticSupperApp_1.default.cacheTotalDashboardData);
 // user
-router.use('/app/user', analyticSupperApp_1.default.getUserDashboard);
+router.use('/app/user/get', analyticSupperApp_1.default.getUserDashboard);
+router.use('/app/user/cache', analyticSupperApp_1.default.cacheUserDashboard);
 router.use('/app/user/country', analyticSupperApp_1.default.getPopularCountries);
-router.use('/app/user/device', analyticSupperApp_1.default.getDeviceDashboard);
+router.use('/app/user/device/get', analyticSupperApp_1.default.getDeviceDashboard);
+router.use('/app/user/device/cache', analyticSupperApp_1.default.cacheDeviceDashboard);
 // wallet
 router.use('/app/wallet', analyticSupperApp_1.default.getWalletDashboard);
 router.use('/app/wallet/chart', analyticSupperApp_1.default.getWalletChart);

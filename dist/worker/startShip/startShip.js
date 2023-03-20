@@ -73,6 +73,15 @@ class StarshipServices {
             //  if Exists =>req.response = {errMess:"alreadyRegister"}
             // return next()
             const { chain, id, address, hash, } = req.body;
+            const detailTxs = yield evmService_1.default.getTxsByHash(chain, hash);
+            if (!detailTxs) {
+                req.response = { errMess: 'TxsNotFound' };
+                return next();
+            }
+            if ((0, function_1.convertCheckSUM)(detailTxs.to) !== CONTRACT_CHECK) {
+                req.response = { errMess: 'contractInvalid' };
+                return next();
+            }
             const findStartShipParticipantData = yield StartShipParticipant_1.default.countDocuments({ id, chain, address });
             if (findStartShipParticipantData) {
                 req.response = { errMess: 'alreadyRegister' };
@@ -142,9 +151,9 @@ class StarshipServices {
             // create StashipPad
             // slug gen from infomation.name by function
             // check slug exist if exist => show errMess slugExists
-            const { information, contract } = req.body;
+            const { hash, chainId, information, content, token0, token1, contract, date, status, social, isPrivate, whitelist, isActive, } = req.body;
             if ((0, function_1.convertCheckSUM)(contract.address) !== CONTRACT_CHECK) {
-                req.response = { errMess: 'contract invalid' };
+                req.response = { errMess: 'contractInvalid' };
                 return next();
             }
             const genSlug = (0, exports.createSlug)(information.name);
@@ -156,7 +165,10 @@ class StarshipServices {
                 req.response = { errMess: 'slugExists' };
                 return next();
             }
-            yield StartShipPad_1.default.create(Object.assign(Object.assign({}, req.body), { slug: genSlug }));
+            const newData = {
+                slug: genSlug, hash, chainId, information, content, token0, token1, contract, date, status, social, isPrivate, whitelist, isActive,
+            };
+            yield StartShipPad_1.default.create(newData);
             req.response = true;
             next();
         });

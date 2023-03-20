@@ -7,7 +7,7 @@ import DashboardData, { DashboardFiledResponse, DashboardInterface } from '../..
 import User from '../../model/user/User';
 import KYCVerify from '../../model/user/KYCVerify';
 import IPUser from '../../model/user/IPUser';
-import RecordCacheData from '../../model/system/RecordCacheData';
+import RecordCacheData, { RecordCacheDataInterface } from '../../model/system/RecordCacheData';
 import DeviceSource, { DeviceSourceInterface } from '../../model/DeviceSource/DeviceSource';
 import {
   getQueryTimeArray, getQueryChart,
@@ -19,9 +19,22 @@ import AggregatorHistory from '../../model/aggregatorHistory/AggregatorHistory';
 import { getDataDashBoard } from '../function';
 import { DurationTime } from '../dagora/dagoraHistory';
 
+export const TIME_CHARTS = ['day', 'week', 'month', 'all'];
+
 export default class AnalyticSupperAppWorker {
   // DashBoard
   static async getTotalDashboardData(req: RequestCustom, res: Response, next: NextFunction) {
+    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: 'dashboard-data' }, { _id: 0, data: 1 }).lean();
+    if (!recordDashboardData) {
+      req.response = {};
+      next();
+    } else {
+      req.response = recordDashboardData.data;
+      next();
+    }
+  }
+
+  static async cacheTotalDashboardData(req: RequestCustom, res: Response, next: NextFunction) {
     const time: number = new Date('2022-07-23 17:00:00.000Z').getTime();
     const to: Moment = moment(time);
     const from: Moment = moment(time).subtract(14, 'day');
@@ -42,8 +55,7 @@ export default class AnalyticSupperAppWorker {
       startAt: 1,
       pointTotal: 1,
     }).sort({ startAt: -1 }).lean();
-
-    req.response = {
+    const data = {
       newUser: {
         total: getDataDashBoard('userNew', dashboardData14days).total,
         percent: getDataDashBoard('userNew', dashboardData14days).percent,
@@ -72,21 +84,23 @@ export default class AnalyticSupperAppWorker {
       await RecordCacheData.create({
         id: 'dashboard-data',
         time: new Date().getTime(),
-        data: req.response,
+        data,
       });
     } else {
       await cacheDataDashBoard.updateOne({
         time: new Date().getTime(),
-        data: req.response,
+        data,
       });
     }
+
+    req.response = true;
 
     next();
   }
 
   static async getChartDashboard(req: RequestCustom, res: Response, next: NextFunction) {
     const time: number = new Date('2022-07-23 17:00:00.000Z').getTime();
-    const { type = 'week', chart } = req.query;
+    const { type = 'all', chart } = req.query;
 
     const { matchTime, interval } = getQueryChart(type, time);
 
@@ -131,43 +145,142 @@ export default class AnalyticSupperAppWorker {
 
     req.response = dashboardData;
 
-    const cacheDataDashBoard = await RecordCacheData.findOne({ id: 'dashboard-data' });
-    if (!cacheDataDashBoard) {
-      await RecordCacheData.create({
-        id: 'dashboard-data',
-        time: new Date().getTime(),
-        data: req.response,
-      });
-    } else {
-      await cacheDataDashBoard.updateOne({
-        time: new Date().getTime(),
-        data: req.response,
-      });
-    }
-
     next();
   }
 
   // User
   static async getUserDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time: number = new Date().getTime();
-    const { type } = req.query;
-    const { matchTime } = getQueryChart(type, time);
-    const userDataTotalPromise = User.countDocuments({
-      createdAt: matchTime,
-    }).lean();
+    const { type = 'all' } = req.query;
+    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: `total-user-data-${type}` }, { _id: 0, data: 1 }).lean();
+    if (!recordDashboardData) {
+      req.response = {};
+      next();
+    } else {
+      req.response = recordDashboardData.data;
+      next();
+    }
+  }
 
-    const userKCYPromise = KYCVerify.countDocuments({
-      createdAt: matchTime,
-      status: 'verified',
-    }).lean();
+  static async cacheUserDashboard(req: RequestCustom, res: Response, next: NextFunction) {
+    await Promise.all(TIME_CHARTS.map(async (type) => {
+      const time: number = new Date().getTime();
+      const { matchTime } = getQueryChart(type, time);
+      const userDataTotalPromise = User.countDocuments({
+        createdAt: matchTime,
+      }).lean();
 
-    const [totalUser, kycUser] = await Promise.all([userDataTotalPromise, userKCYPromise]);
-    req.response = {
-      totalUser,
-      newUser: totalUser - kycUser,
-      kycUser,
-    };
+      const userKCYPromise = KYCVerify.countDocuments({
+        createdAt: matchTime,
+        status: 'verified',
+      }).lean();
+
+      const [totalUser, kycUser] = await Promise.all([userDataTotalPromise, userKCYPromise]);
+      const data = {
+        totalUser,
+        newUser: totalUser - kycUser,
+        kycUser,
+      };
+
+      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `total-user-data-${type}` });
+      if (!cacheDataDashBoard) {
+        await RecordCacheData.create({
+          id: `total-user-data-${type}`,
+          time: new Date().getTime(),
+          data,
+        });
+      } else {
+        await cacheDataDashBoard.updateOne({
+          time: new Date().getTime(),
+          data,
+        });
+      }
+    }));
+
+    req.response = true;
+    next();
+  }
+
+  static async getDeviceDashboard(req: RequestCustom, res: Response, next: NextFunction) {
+    const { type = 'all' } = req.query;
+    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: `devices-data-${type}` }, { _id: 0, data: 1 }).lean();
+    if (!recordDashboardData) {
+      req.response = {};
+      next();
+    } else {
+      req.response = recordDashboardData.data;
+      next();
+    }
+  }
+
+  static async cacheDeviceDashboard(req: RequestCustom, res: Response, next: NextFunction) {
+    await Promise.all(TIME_CHARTS.map(async (type) => {
+      const time: number = new Date().getTime();
+      const to: Moment = moment(time);
+      let from: Moment;
+      let arrQueryTime: DurationTime[];
+
+      switch (type) {
+        case 'week':
+          from = moment(time).subtract(7, 'day');
+          arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'day').slice(1);
+          break;
+
+        case 'month':
+          from = moment(time).subtract(1, 'month');
+          arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'day').slice(1);
+          break;
+
+        case 'all':
+          from = moment((await DeviceSource.aggregate(
+            [
+              {
+                $group:
+                {
+                  _id: null,
+                  minTime: { $min: '$createdAt' },
+                },
+              },
+            ],
+          ))[0].minTime);
+          arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'month');
+          break;
+
+        default:
+          from = moment(time).subtract(1, 'day');
+          arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'hour').slice(1);
+          break;
+      }
+
+      const deviceSourceData: DeviceSourceInterface[] = await DeviceSource.find({
+        createdAt: { $gte: arrQueryTime[0]?.start, $lte: arrQueryTime[arrQueryTime.length - 1]?.end },
+      }, { _id: 0, os: 1, createdAt: 1 }).lean();
+
+      const getTotalData = (start: Date, end: Date, os: string) : number => deviceSourceData.filter(
+        (item) => item.createdAt >= start && item.createdAt <= end && item.os === os,
+      ).length;
+
+      const data = arrQueryTime.map((item) => ({
+        time: item.start,
+        ios: getTotalData(item.start, item.end, 'ios'),
+        android: getTotalData(item.start, item.end, 'android'),
+      }));
+
+      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `devices-data-${type}` });
+      if (!cacheDataDashBoard) {
+        await RecordCacheData.create({
+          id: `devices-data-${type}`,
+          time: new Date().getTime(),
+          data,
+        });
+      } else {
+        await cacheDataDashBoard.updateOne({
+          time: new Date().getTime(),
+          data,
+        });
+      }
+    }));
+
+    req.response = true;
     next();
   }
 
@@ -198,63 +311,6 @@ export default class AnalyticSupperAppWorker {
     const dataRes = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
     req.response = dataRes;
 
-    next();
-  }
-
-  static async getDeviceDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const time: number = new Date().getTime();
-    const { type } = req.query;
-    const to: Moment = moment(time);
-    let from: Moment;
-    let arrQueryTime: DurationTime[];
-
-    switch (type) {
-      case 'week':
-        from = moment(time).subtract(7, 'day');
-        arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'day').slice(1);
-        break;
-
-      case 'month':
-        from = moment(time).subtract(1, 'month');
-        arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'day').slice(1);
-        break;
-
-      case 'all':
-        from = moment((await DeviceSource.aggregate(
-          [
-            {
-              $group:
-              {
-                _id: null,
-                minTime: { $min: '$createdAt' },
-              },
-            },
-          ],
-        ))[0].minTime);
-        arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'month');
-        break;
-
-      default:
-        from = moment(time).subtract(1, 'day');
-        arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'hour').slice(1);
-        break;
-    }
-
-    const deviceSourceData: DeviceSourceInterface[] = await DeviceSource.find({
-      createdAt: { $gte: arrQueryTime[0]?.start, $lte: arrQueryTime[arrQueryTime.length - 1]?.end },
-    }, { _id: 0, os: 1, createdAt: 1 }).lean();
-
-    const getTotalData = (start: Date, end: Date, os: string) : number => deviceSourceData.filter(
-      (item) => item.createdAt >= start && item.createdAt <= end && item.os === os,
-    ).length;
-
-    const dataResponse = arrQueryTime.map((item) => ({
-      time: item.start,
-      ios: getTotalData(item.start, item.end, 'ios'),
-      android: getTotalData(item.start, item.end, 'android'),
-    }));
-
-    req.response = dataResponse;
     next();
   }
 

@@ -5,3 +5,9 @@ export default createSchema({
   id: defaultModel.stringUnique,
   data: defaultModel.object,
 }, 'RecordCacheData', null, null);
+
+export interface RecordCacheDataInterface {
+  time: number,
+  id: string,
+  data: object,
+}
