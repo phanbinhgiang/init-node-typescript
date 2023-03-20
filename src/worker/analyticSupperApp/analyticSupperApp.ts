@@ -285,37 +285,75 @@ export default class AnalyticSupperAppWorker {
   }
 
   static async getPopularCountries(req: RequestCustom, res: Response, next: NextFunction) {
-    const time: number = new Date().getTime();
-    const { type } = req.query;
-    const { matchTime } = getQueryChart(type, time);
-    const dataCountries = await IPUser.aggregate([
-      {
-        $match: {
-          createdAt: matchTime,
-        },
-      },
-      {
-        $group: {
-          _id: '$country',
-          total: { $sum: 1 },
-        },
-      },
-      {
-        $sort: {
-          total: -1,
-        },
-      },
-    ]);
+    const { type = 'all' } = req.query;
+    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: `popular-countries-data-${type}` }, { _id: 0, data: 1 }).lean();
+    if (!recordDashboardData) {
+      req.response = [];
+      next();
+    } else {
+      req.response = recordDashboardData.data;
+      next();
+    }
+  }
 
-    const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
-    const dataRes = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
-    req.response = dataRes;
+  static async cachePopularCountries(req: RequestCustom, res: Response, next: NextFunction) {
+    await Promise.all(TIME_CHARTS.map(async (type) => {
+      const time: number = new Date().getTime();
+      const { matchTime } = getQueryChart(type, time);
+      const dataCountries = await IPUser.aggregate([
+        {
+          $match: {
+            createdAt: matchTime,
+          },
+        },
+        {
+          $group: {
+            _id: '$country',
+            total: { $sum: 1 },
+          },
+        },
+        {
+          $sort: {
+            total: -1,
+          },
+        },
+      ]);
 
+      const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
+      const data = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
+
+      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `popular-countries-data-${type}` });
+      if (!cacheDataDashBoard) {
+        await RecordCacheData.create({
+          id: `popular-countries-data-${type}`,
+          time: new Date().getTime(),
+          data,
+        });
+      } else {
+        await cacheDataDashBoard.updateOne({
+          time: new Date().getTime(),
+          data,
+        });
+      }
+    }));
+
+    req.response = true;
     next();
   }
 
   // Wallet
   static async getWalletDashboard(req: RequestCustom, res: Response, next: NextFunction) {
+    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: 'wallet-data' }, { _id: 0, data: 1 }).lean();
+    if (!recordDashboardData) {
+      req.response = {};
+      next();
+    } else {
+      req.response = recordDashboardData.data;
+      next();
+    }
+  }
+
+  static async cacheWalletDashboard(req: RequestCustom, res: Response, next: NextFunction) {
     // return: wallet User( total, percent), total wallet created (total, percent), total wallet, total transfer volume, total transfer transaction
     const time: number = new Date('2022-07-23 17:00:00.000Z').getTime();
     const to : Moment = moment(time);
@@ -357,7 +395,7 @@ export default class AnalyticSupperAppWorker {
     const totalWalletUsers7days = addressData7days.map((item) => item.createdUser).flat().filter((value, index, self) => self.indexOf(value) === index);
     const totalWalletUsers7daysBefore = addressData7daysBefore.map((item) => item.createdUser).flat().filter((value, index, self) => self.indexOf(value) === index);
 
-    req.response = {
+    const data = {
       walletUser: {
         total: totalWalletUsers7days.length,
         percent: totalWalletUsers7daysBefore.length ? ((totalWalletUsers7days.length - totalWalletUsers7daysBefore.length) / totalWalletUsers7daysBefore.length) * 100 : 0,
@@ -370,6 +408,22 @@ export default class AnalyticSupperAppWorker {
       totalTransferVolume: dashboardData14days.length ? dashboardData14days[0].transactionVolumeTotal : 0,
       totalTransferTransaction: dashboardData14days.length ? dashboardData14days[0].transactionCountTotal : 0,
     };
+
+    const cacheDataDashBoard = await RecordCacheData.findOne({ id: 'wallet-data' });
+    if (!cacheDataDashBoard) {
+      await RecordCacheData.create({
+        id: 'wallet-data',
+        time: new Date().getTime(),
+        data,
+      });
+    } else {
+      await cacheDataDashBoard.updateOne({
+        time: new Date().getTime(),
+        data,
+      });
+    }
+
+    req.response = true;
     next();
   }
 

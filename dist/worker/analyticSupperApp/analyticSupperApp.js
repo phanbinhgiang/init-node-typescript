@@ -278,35 +278,77 @@ class AnalyticSupperAppWorker {
     }
     static getPopularCountries(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date().getTime();
-            const { type } = req.query;
-            const { matchTime } = (0, index_1.getQueryChart)(type, time);
-            const dataCountries = yield IPUser_1.default.aggregate([
-                {
-                    $match: {
-                        createdAt: matchTime,
+            const { type = 'all' } = req.query;
+            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: `popular-countries-data-${type}` }, { _id: 0, data: 1 }).lean();
+            if (!recordDashboardData) {
+                req.response = [];
+                next();
+            }
+            else {
+                req.response = recordDashboardData.data;
+                next();
+            }
+        });
+    }
+    static cachePopularCountries(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield Promise.all(exports.TIME_CHARTS.map((type) => __awaiter(this, void 0, void 0, function* () {
+                const time = new Date().getTime();
+                const { matchTime } = (0, index_1.getQueryChart)(type, time);
+                const dataCountries = yield IPUser_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: matchTime,
+                        },
                     },
-                },
-                {
-                    $group: {
-                        _id: '$country',
-                        total: { $sum: 1 },
+                    {
+                        $group: {
+                            _id: '$country',
+                            total: { $sum: 1 },
+                        },
                     },
-                },
-                {
-                    $sort: {
-                        total: -1,
+                    {
+                        $sort: {
+                            total: -1,
+                        },
                     },
-                },
-            ]);
-            const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
-            const dataRes = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
-            req.response = dataRes;
+                ]);
+                const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
+                const data = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
+                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `popular-countries-data-${type}` });
+                if (!cacheDataDashBoard) {
+                    yield RecordCacheData_1.default.create({
+                        id: `popular-countries-data-${type}`,
+                        time: new Date().getTime(),
+                        data,
+                    });
+                }
+                else {
+                    yield cacheDataDashBoard.updateOne({
+                        time: new Date().getTime(),
+                        data,
+                    });
+                }
+            })));
+            req.response = true;
             next();
         });
     }
     // Wallet
     static getWalletDashboard(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: 'wallet-data' }, { _id: 0, data: 1 }).lean();
+            if (!recordDashboardData) {
+                req.response = {};
+                next();
+            }
+            else {
+                req.response = recordDashboardData.data;
+                next();
+            }
+        });
+    }
+    static cacheWalletDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             // return: wallet User( total, percent), total wallet created (total, percent), total wallet, total transfer volume, total transfer transaction
             const time = new Date('2022-07-23 17:00:00.000Z').getTime();
@@ -343,7 +385,7 @@ class AnalyticSupperAppWorker {
             const totalWalletCreated7daysBefore = dashboardData14days.slice(7).reduce((total, item) => total + item.addressNew, 0);
             const totalWalletUsers7days = addressData7days.map((item) => item.createdUser).flat().filter((value, index, self) => self.indexOf(value) === index);
             const totalWalletUsers7daysBefore = addressData7daysBefore.map((item) => item.createdUser).flat().filter((value, index, self) => self.indexOf(value) === index);
-            req.response = {
+            const data = {
                 walletUser: {
                     total: totalWalletUsers7days.length,
                     percent: totalWalletUsers7daysBefore.length ? ((totalWalletUsers7days.length - totalWalletUsers7daysBefore.length) / totalWalletUsers7daysBefore.length) * 100 : 0,
@@ -356,6 +398,21 @@ class AnalyticSupperAppWorker {
                 totalTransferVolume: dashboardData14days.length ? dashboardData14days[0].transactionVolumeTotal : 0,
                 totalTransferTransaction: dashboardData14days.length ? dashboardData14days[0].transactionCountTotal : 0,
             };
+            const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: 'wallet-data' });
+            if (!cacheDataDashBoard) {
+                yield RecordCacheData_1.default.create({
+                    id: 'wallet-data',
+                    time: new Date().getTime(),
+                    data,
+                });
+            }
+            else {
+                yield cacheDataDashBoard.updateOne({
+                    time: new Date().getTime(),
+                    data,
+                });
+            }
+            req.response = true;
             next();
         });
     }

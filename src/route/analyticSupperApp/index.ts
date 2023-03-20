@@ -11,14 +11,16 @@ router.use('/app/cache', AnalyticSupperAppWorker.cacheTotalDashboardData);
 // user
 router.use('/app/user/get', AnalyticSupperAppWorker.getUserDashboard);
 router.use('/app/user/cache', AnalyticSupperAppWorker.cacheUserDashboard);
-router.use('/app/user/country', AnalyticSupperAppWorker.getPopularCountries);
+router.use('/app/user/country/get', AnalyticSupperAppWorker.getPopularCountries);
+router.use('/app/user/country/cache', AnalyticSupperAppWorker.cachePopularCountries);
 router.use('/app/user/device/get', AnalyticSupperAppWorker.getDeviceDashboard);
 router.use('/app/user/device/cache', AnalyticSupperAppWorker.cacheDeviceDashboard);
 
 // wallet
-router.use('/app/wallet', AnalyticSupperAppWorker.getWalletDashboard);
+router.use('/app/wallet/get', AnalyticSupperAppWorker.getWalletDashboard);
+router.use('/app/wallet/cache', AnalyticSupperAppWorker.cacheWalletDashboard);
 router.use('/app/wallet/chart', AnalyticSupperAppWorker.getWalletChart);
-router.use('/app/wallet/chart/detail', AnalyticSupperAppWorker.getWalletCreateNewAndRestore);
+router.use('/app/wallet/chart/detail/get', AnalyticSupperAppWorker.getWalletCreateNewAndRestore);
 router.use('/app/wallet/chart/transaction', AnalyticSupperAppWorker.getDetailTransaction);
 
 // swap
