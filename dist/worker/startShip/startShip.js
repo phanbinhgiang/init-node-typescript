@@ -57,7 +57,7 @@ class StarshipServices {
             const { id } = req.params;
             const findStatShipPadData = yield StartShipPad_1.default.findOne({ slug: id }).lean();
             if (!findStatShipPadData) {
-                req.response = { errMess: `document not found with slug: ${id}` };
+                req.response = { errMess: `documentNotFoundWithSlug:${id}` };
                 return next();
             }
             req.response = findStatShipPadData;

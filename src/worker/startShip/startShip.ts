@@ -46,7 +46,7 @@ export default class StarshipServices {
     const { id } = req.params;
     const findStatShipPadData = await StartShipPad.findOne({ slug: id }).lean();
     if (!findStatShipPadData) {
-      req.response = { errMess: `document not found with slug: ${id}` };
+      req.response = { errMess: `documentNotFoundWithSlug:${id}` };
       return next();
     }
     req.response = findStatShipPadData;

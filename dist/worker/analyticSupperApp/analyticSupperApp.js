@@ -30,15 +30,9 @@ class AnalyticSupperAppWorker {
     // DashBoard
     static getTotalDashboardData(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: 'dashboard-data' }, { _id: 0, data: 1 }).lean();
-            if (!recordDashboardData) {
-                req.response = {};
-                next();
-            }
-            else {
-                req.response = recordDashboardData.data;
-                next();
-            }
+            const data = yield AnalyticSupperAppWorker.getRecordCacheData('dashboard-data');
+            req.response = data;
+            next();
         });
     }
     static cacheTotalDashboardData(req, res, next) {
@@ -153,15 +147,9 @@ class AnalyticSupperAppWorker {
     static getUserDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const { type = 'all' } = req.query;
-            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: `total-user-data-${type}` }, { _id: 0, data: 1 }).lean();
-            if (!recordDashboardData) {
-                req.response = {};
-                next();
-            }
-            else {
-                req.response = recordDashboardData.data;
-                next();
-            }
+            const data = yield AnalyticSupperAppWorker.getRecordCacheData(`total-user-data-${type}`);
+            req.response = data;
+            next();
         });
     }
     static cacheUserDashboard(req, res, next) {
@@ -204,15 +192,9 @@ class AnalyticSupperAppWorker {
     static getDeviceDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const { type = 'all' } = req.query;
-            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: `devices-data-${type}` }, { _id: 0, data: 1 }).lean();
-            if (!recordDashboardData) {
-                req.response = {};
-                next();
-            }
-            else {
-                req.response = recordDashboardData.data;
-                next();
-            }
+            const data = yield AnalyticSupperAppWorker.getRecordCacheData(`devices-data-${type}`);
+            req.response = data;
+            next();
         });
     }
     static cacheDeviceDashboard(req, res, next) {
@@ -279,15 +261,9 @@ class AnalyticSupperAppWorker {
     static getPopularCountries(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
             const { type = 'all' } = req.query;
-            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: `popular-countries-data-${type}` }, { _id: 0, data: 1 }).lean();
-            if (!recordDashboardData) {
-                req.response = [];
-                next();
-            }
-            else {
-                req.response = recordDashboardData.data;
-                next();
-            }
+            const data = yield AnalyticSupperAppWorker.getRecordCacheData(`popular-countries-data-${type}`);
+            req.response = data;
+            next();
         });
     }
     static cachePopularCountries(req, res, next) {
@@ -337,15 +313,9 @@ class AnalyticSupperAppWorker {
     // Wallet
     static getWalletDashboard(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id: 'wallet-data' }, { _id: 0, data: 1 }).lean();
-            if (!recordDashboardData) {
-                req.response = {};
-                next();
-            }
-            else {
-                req.response = recordDashboardData.data;
-                next();
-            }
+            const data = yield AnalyticSupperAppWorker.getRecordCacheData('wallet-data');
+            req.response = data;
+            next();
         });
     }
     static cacheWalletDashboard(req, res, next) {
@@ -462,63 +432,87 @@ class AnalyticSupperAppWorker {
     }
     static getWalletCreateNewAndRestore(req, res, next) {
         return __awaiter(this, void 0, void 0, function* () {
-            const time = new Date().getTime();
-            const { type } = req.query;
-            const { matchTime } = (0, index_1.getQueryChart)(type, time);
-            const createNewTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 } }).lean();
-            const createNewMultiTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 }, isMulti: false }).lean();
-            const createNewSingleChainDetailPromise = AddressList_1.default.aggregate([
-                {
-                    $match: {
-                        createdAt: matchTime,
-                        numCreated: { $lte: 1 },
-                        isMulti: false,
+            const { type = 'all' } = req.query;
+            const data = yield AnalyticSupperAppWorker.getRecordCacheData(`wallet-create-restore-data-${type}`);
+            req.response = data;
+            next();
+        });
+    }
+    static cacheWalletCreateNewAndRestore(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield Promise.all(exports.TIME_CHARTS.map((type) => __awaiter(this, void 0, void 0, function* () {
+                const time = new Date().getTime();
+                const { matchTime } = (0, index_1.getQueryChart)(type, time);
+                const createNewTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 } }).lean();
+                const createNewMultiTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 }, isMulti: false }).lean();
+                const createNewSingleChainDetailPromise = AddressList_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: matchTime,
+                            numCreated: { $lte: 1 },
+                            isMulti: false,
+                        },
                     },
-                },
-                {
-                    $group: {
-                        _id: '$chain',
-                        total: { $sum: 1 },
+                    {
+                        $group: {
+                            _id: '$chain',
+                            total: { $sum: 1 },
+                        },
                     },
-                },
-            ]);
-            const restoreTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 } }).lean();
-            const restoreMultiTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 }, isMulti: false }).lean();
-            const restoreSingleChainDetailPromise = AddressList_1.default.aggregate([
-                {
-                    $match: {
-                        createdAt: matchTime,
-                        numCreated: { $gt: 1 },
-                        isMulti: false,
+                ]);
+                const restoreTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 } }).lean();
+                const restoreMultiTotalPromise = AddressList_1.default.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 }, isMulti: false }).lean();
+                const restoreSingleChainDetailPromise = AddressList_1.default.aggregate([
+                    {
+                        $match: {
+                            createdAt: matchTime,
+                            numCreated: { $gt: 1 },
+                            isMulti: false,
+                        },
                     },
-                },
-                {
-                    $group: {
-                        _id: '$chain',
-                        total: { $sum: 1 },
+                    {
+                        $group: {
+                            _id: '$chain',
+                            total: { $sum: 1 },
+                        },
                     },
-                },
-            ]);
-            const [createNewTotal, createNewMultiTotal, createNewSingleChainDetail, restoreTotal, restoreMultiTotal, restoreSingleChainDetail] = yield Promise.all([createNewTotalPromise, createNewMultiTotalPromise, createNewSingleChainDetailPromise, restoreTotalPromise, restoreMultiTotalPromise, restoreSingleChainDetailPromise]);
-            const percentRestoreMultiChain = (restoreMultiTotal / restoreTotal) * 100;
-            const percentCreateNewMultiChain = (createNewMultiTotal / createNewTotal) * 100;
-            const createNewSingleChainTotal = createNewSingleChainDetail.reduce((total, value) => total + value.total, 0);
-            const restoreSingleChainTotal = restoreSingleChainDetail.reduce((total, value) => total + value.total, 0);
-            req.response = {
-                walletCreate: createNewTotal + restoreTotal,
-                createNew: {
-                    total: createNewTotal,
-                    singleChain: percentCreateNewMultiChain,
-                    multiChain: 100 - percentCreateNewMultiChain,
-                    singleChainDetail: createNewSingleChainDetail.map((item) => ({ chain: item._id, percent: createNewSingleChainTotal ? (item.total / createNewSingleChainTotal) * 100 : 0 })),
-                },
-                restore: {
-                    total: restoreTotal,
-                    singleChain: percentRestoreMultiChain,
-                    multiChain: 100 - percentRestoreMultiChain,
-                    singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
-                },
-            };
+                ]);
+                const [createNewTotal, createNewMultiTotal, createNewSingleChainDetail, restoreTotal, restoreMultiTotal, restoreSingleChainDetail] = yield Promise.all([createNewTotalPromise, createNewMultiTotalPromise, createNewSingleChainDetailPromise, restoreTotalPromise, restoreMultiTotalPromise, restoreSingleChainDetailPromise]);
+                const percentRestoreMultiChain = (restoreMultiTotal / restoreTotal) * 100;
+                const percentCreateNewMultiChain = (createNewMultiTotal / createNewTotal) * 100;
+                const createNewSingleChainTotal = createNewSingleChainDetail.reduce((total, value) => total + value.total, 0);
+                const restoreSingleChainTotal = restoreSingleChainDetail.reduce((total, value) => total + value.total, 0);
+                const data = {
+                    walletCreate: createNewTotal + restoreTotal,
+                    createNew: {
+                        total: createNewTotal,
+                        singleChain: percentCreateNewMultiChain,
+                        multiChain: 100 - percentCreateNewMultiChain,
+                        singleChainDetail: createNewSingleChainDetail.map((item) => ({ chain: item._id, percent: createNewSingleChainTotal ? (item.total / createNewSingleChainTotal) * 100 : 0 })),
+                    },
+                    restore: {
+                        total: restoreTotal,
+                        singleChain: percentRestoreMultiChain,
+                        multiChain: 100 - percentRestoreMultiChain,
+                        singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
+                    },
+                };
+                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `wallet-create-restore-data-${type}` });
+                if (!cacheDataDashBoard) {
+                    yield RecordCacheData_1.default.create({
+                        id: `wallet-create-restore-data-${type}`,
+                        time: new Date().getTime(),
+                        data,
+                    });
+                }
+                else {
+                    yield cacheDataDashBoard.updateOne({
+                        time: new Date().getTime(),
+                        data,
+                    });
+                }
+            })));
+            req.response = true;
             next();
         });
     }
@@ -903,6 +897,15 @@ class AnalyticSupperAppWorker {
             createAndUpdateDashboardData(arrayTimeMonth, 'month');
             req.response = true;
             next();
+        });
+    }
+    static getRecordCacheData(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id }, { _id: 0, data: 1 }).lean();
+            if (!recordDashboardData) {
+                return { errMess: `documentNotFoundWithId:${id}` };
+            }
+            return recordDashboardData.data;
         });
     }
 }

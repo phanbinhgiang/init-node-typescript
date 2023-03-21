@@ -21,6 +21,7 @@ router.use('/app/wallet/get', AnalyticSupperAppWorker.getWalletDashboard);
 router.use('/app/wallet/cache', AnalyticSupperAppWorker.cacheWalletDashboard);
 router.use('/app/wallet/chart', AnalyticSupperAppWorker.getWalletChart);
 router.use('/app/wallet/chart/detail/get', AnalyticSupperAppWorker.getWalletCreateNewAndRestore);
+router.use('/app/wallet/chart/detail/cache', AnalyticSupperAppWorker.cacheWalletCreateNewAndRestore);
 router.use('/app/wallet/chart/transaction', AnalyticSupperAppWorker.getDetailTransaction);
 
 // swap

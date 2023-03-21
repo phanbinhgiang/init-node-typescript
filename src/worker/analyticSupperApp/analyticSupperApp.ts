@@ -24,14 +24,9 @@ export const TIME_CHARTS = ['day', 'week', 'month', 'all'];
 export default class AnalyticSupperAppWorker {
   // DashBoard
   static async getTotalDashboardData(req: RequestCustom, res: Response, next: NextFunction) {
-    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: 'dashboard-data' }, { _id: 0, data: 1 }).lean();
-    if (!recordDashboardData) {
-      req.response = {};
-      next();
-    } else {
-      req.response = recordDashboardData.data;
-      next();
-    }
+    const data = await AnalyticSupperAppWorker.getRecordCacheData('dashboard-data');
+    req.response = data;
+    next();
   }
 
   static async cacheTotalDashboardData(req: RequestCustom, res: Response, next: NextFunction) {
@@ -151,14 +146,9 @@ export default class AnalyticSupperAppWorker {
   // User
   static async getUserDashboard(req: RequestCustom, res: Response, next: NextFunction) {
     const { type = 'all' } = req.query;
-    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: `total-user-data-${type}` }, { _id: 0, data: 1 }).lean();
-    if (!recordDashboardData) {
-      req.response = {};
-      next();
-    } else {
-      req.response = recordDashboardData.data;
-      next();
-    }
+    const data = await AnalyticSupperAppWorker.getRecordCacheData(`total-user-data-${type}`);
+    req.response = data;
+    next();
   }
 
   static async cacheUserDashboard(req: RequestCustom, res: Response, next: NextFunction) {
@@ -202,14 +192,9 @@ export default class AnalyticSupperAppWorker {
 
   static async getDeviceDashboard(req: RequestCustom, res: Response, next: NextFunction) {
     const { type = 'all' } = req.query;
-    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: `devices-data-${type}` }, { _id: 0, data: 1 }).lean();
-    if (!recordDashboardData) {
-      req.response = {};
-      next();
-    } else {
-      req.response = recordDashboardData.data;
-      next();
-    }
+    const data = await AnalyticSupperAppWorker.getRecordCacheData(`devices-data-${type}`);
+    req.response = data;
+    next();
   }
 
   static async cacheDeviceDashboard(req: RequestCustom, res: Response, next: NextFunction) {
@@ -286,14 +271,9 @@ export default class AnalyticSupperAppWorker {
 
   static async getPopularCountries(req: RequestCustom, res: Response, next: NextFunction) {
     const { type = 'all' } = req.query;
-    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: `popular-countries-data-${type}` }, { _id: 0, data: 1 }).lean();
-    if (!recordDashboardData) {
-      req.response = [];
-      next();
-    } else {
-      req.response = recordDashboardData.data;
-      next();
-    }
+    const data = await AnalyticSupperAppWorker.getRecordCacheData(`popular-countries-data-${type}`);
+    req.response = data;
+    next();
   }
 
   static async cachePopularCountries(req: RequestCustom, res: Response, next: NextFunction) {
@@ -343,14 +323,9 @@ export default class AnalyticSupperAppWorker {
 
   // Wallet
   static async getWalletDashboard(req: RequestCustom, res: Response, next: NextFunction) {
-    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id: 'wallet-data' }, { _id: 0, data: 1 }).lean();
-    if (!recordDashboardData) {
-      req.response = {};
-      next();
-    } else {
-      req.response = recordDashboardData.data;
-      next();
-    }
+    const data = await AnalyticSupperAppWorker.getRecordCacheData('wallet-data');
+    req.response = data;
+    next();
   }
 
   static async cacheWalletDashboard(req: RequestCustom, res: Response, next: NextFunction) {
@@ -476,67 +451,91 @@ export default class AnalyticSupperAppWorker {
   }
 
   static async getWalletCreateNewAndRestore(req: RequestCustom, res: Response, next: NextFunction) {
-    const time: number = new Date().getTime();
-    const { type } = req.query;
-    const { matchTime } = getQueryChart(type, time);
+    const { type = 'all' } = req.query;
+    const data = await AnalyticSupperAppWorker.getRecordCacheData(`wallet-create-restore-data-${type}`);
+    req.response = data;
+    next();
+  }
 
-    const createNewTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 } }).lean();
-    const createNewMultiTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 }, isMulti: false }).lean();
-    const createNewSingleChainDetailPromise = AddressList.aggregate([
-      {
-        $match: {
-          createdAt: matchTime,
-          numCreated: { $lte: 1 },
-          isMulti: false,
-        },
-      },
-      {
-        $group: {
-          _id: '$chain',
-          total: { $sum: 1 },
-        },
-      },
-    ]);
+  static async cacheWalletCreateNewAndRestore(req: RequestCustom, res: Response, next: NextFunction) {
+    await Promise.all(TIME_CHARTS.map(async (type) => {
+      const time: number = new Date().getTime();
+      const { matchTime } = getQueryChart(type, time);
 
-    const restoreTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 } }).lean();
-    const restoreMultiTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 }, isMulti: false }).lean();
-    const restoreSingleChainDetailPromise = AddressList.aggregate([
-      {
-        $match: {
-          createdAt: matchTime,
-          numCreated: { $gt: 1 },
-          isMulti: false,
+      const createNewTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 } }).lean();
+      const createNewMultiTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $lte: 1 }, isMulti: false }).lean();
+      const createNewSingleChainDetailPromise = AddressList.aggregate([
+        {
+          $match: {
+            createdAt: matchTime,
+            numCreated: { $lte: 1 },
+            isMulti: false,
+          },
         },
-      },
-      {
-        $group: {
-          _id: '$chain',
-          total: { $sum: 1 },
+        {
+          $group: {
+            _id: '$chain',
+            total: { $sum: 1 },
+          },
         },
-      },
-    ]);
+      ]);
 
-    const [createNewTotal, createNewMultiTotal, createNewSingleChainDetail, restoreTotal, restoreMultiTotal, restoreSingleChainDetail] = await Promise.all([createNewTotalPromise, createNewMultiTotalPromise, createNewSingleChainDetailPromise, restoreTotalPromise, restoreMultiTotalPromise, restoreSingleChainDetailPromise]);
-    const percentRestoreMultiChain = (restoreMultiTotal / restoreTotal) * 100;
-    const percentCreateNewMultiChain = (createNewMultiTotal / createNewTotal) * 100;
-    const createNewSingleChainTotal = createNewSingleChainDetail.reduce((total, value) => total + value.total, 0);
-    const restoreSingleChainTotal = restoreSingleChainDetail.reduce((total, value) => total + value.total, 0);
+      const restoreTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 } }).lean();
+      const restoreMultiTotalPromise = AddressList.countDocuments({ createdAt: matchTime, numCreated: { $gt: 1 }, isMulti: false }).lean();
+      const restoreSingleChainDetailPromise = AddressList.aggregate([
+        {
+          $match: {
+            createdAt: matchTime,
+            numCreated: { $gt: 1 },
+            isMulti: false,
+          },
+        },
+        {
+          $group: {
+            _id: '$chain',
+            total: { $sum: 1 },
+          },
+        },
+      ]);
 
-    req.response = {
-      walletCreate: createNewTotal + restoreTotal,
-      createNew: {
-        total: createNewTotal,
-        singleChain: percentCreateNewMultiChain,
-        multiChain: 100 - percentCreateNewMultiChain,
-        singleChainDetail: createNewSingleChainDetail.map((item) => ({ chain: item._id, percent: createNewSingleChainTotal ? (item.total / createNewSingleChainTotal) * 100 : 0 })),
-      },
-      restore: {
-        total: restoreTotal,
-        singleChain: percentRestoreMultiChain,
-        multiChain: 100 - percentRestoreMultiChain,
-        singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
-      },
-    };
+      const [createNewTotal, createNewMultiTotal, createNewSingleChainDetail, restoreTotal, restoreMultiTotal, restoreSingleChainDetail] = await Promise.all([createNewTotalPromise, createNewMultiTotalPromise, createNewSingleChainDetailPromise, restoreTotalPromise, restoreMultiTotalPromise, restoreSingleChainDetailPromise]);
+      const percentRestoreMultiChain = (restoreMultiTotal / restoreTotal) * 100;
+      const percentCreateNewMultiChain = (createNewMultiTotal / createNewTotal) * 100;
+      const createNewSingleChainTotal = createNewSingleChainDetail.reduce((total, value) => total + value.total, 0);
+      const restoreSingleChainTotal = restoreSingleChainDetail.reduce((total, value) => total + value.total, 0);
+
+      const data = {
+        walletCreate: createNewTotal + restoreTotal,
+        createNew: {
+          total: createNewTotal,
+          singleChain: percentCreateNewMultiChain,
+          multiChain: 100 - percentCreateNewMultiChain,
+          singleChainDetail: createNewSingleChainDetail.map((item) => ({ chain: item._id, percent: createNewSingleChainTotal ? (item.total / createNewSingleChainTotal) * 100 : 0 })),
+        },
+        restore: {
+          total: restoreTotal,
+          singleChain: percentRestoreMultiChain,
+          multiChain: 100 - percentRestoreMultiChain,
+          singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
+        },
+      };
+
+      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `wallet-create-restore-data-${type}` });
+      if (!cacheDataDashBoard) {
+        await RecordCacheData.create({
+          id: `wallet-create-restore-data-${type}`,
+          time: new Date().getTime(),
+          data,
+        });
+      } else {
+        await cacheDataDashBoard.updateOne({
+          time: new Date().getTime(),
+          data,
+        });
+      }
+    }));
+
+    req.response = true;
     next();
   }
 
@@ -948,5 +947,13 @@ export default class AnalyticSupperAppWorker {
 
     req.response = true;
     next();
+  }
+
+  static async getRecordCacheData(id: string) {
+    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id }, { _id: 0, data: 1 }).lean();
+    if (!recordDashboardData) {
+      return { errMess: `documentNotFoundWithId:${id}` };
+    }
+    return recordDashboardData.data;
   }
 }
