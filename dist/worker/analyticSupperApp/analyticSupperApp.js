@@ -147,6 +147,10 @@ class AnalyticSupperAppWorker {
                 default:
                     break;
             }
+            if (!dataResponse) {
+                req.response = { errMess: `notFondChart:${chart}` };
+                return next();
+            }
             const dashboardData = yield DashboardData_1.default.find({
                 interval,
                 startAt: matchTime,

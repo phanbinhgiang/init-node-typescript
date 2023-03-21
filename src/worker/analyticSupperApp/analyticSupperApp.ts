@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable max-len */
 import { Response, NextFunction } from 'express';
@@ -110,7 +111,6 @@ export default class AnalyticSupperAppWorker {
     const { type = 'all', chart } = req.query;
 
     const { matchTime, interval } = getQueryChart(type, time);
-
     let dataResponse: DashboardFiledResponse;
     switch (chart) {
     // chart dashboard
@@ -143,6 +143,11 @@ export default class AnalyticSupperAppWorker {
 
       default:
         break;
+    }
+
+    if (!dataResponse) {
+      req.response = { errMess: `notFondChart:${chart}` };
+      return next();
     }
 
     const dashboardData: DashboardInterface[] = await DashboardData.find({
@@ -451,6 +456,11 @@ export default class AnalyticSupperAppWorker {
 
       default:
         break;
+    }
+
+    if (!dataResponse) {
+      req.response = { errMess: `notFondChart:${chart}` };
+      return next();
     }
 
     const dashboardData: DashboardInterface[] = await DashboardData.find({
@@ -787,6 +797,11 @@ export default class AnalyticSupperAppWorker {
 
       default:
         break;
+    }
+
+    if (!dataResponse) {
+      req.response = { errMess: `notFondChart:${chart}` };
+      return next();
     }
 
     const dashboardData: DashboardInterface[] = await DashboardData.find({
