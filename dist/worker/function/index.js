@@ -84,8 +84,8 @@ const getQueryTimeArray = (from, to, type) => {
         }
         return listTime;
     };
-    let startDate = (0, moment_1.default)(parseInt(from)).startOf(type);
-    let endDate = (0, moment_1.default)(parseInt(to)).endOf(type);
+    let startDate = (0, moment_1.default)(from).startOf(type);
+    let endDate = (0, moment_1.default)(to).endOf(type);
     if (type === 'week') {
         startDate = startDate.add(1, 'day');
         endDate = endDate.add(1, 'day');

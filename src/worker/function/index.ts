@@ -7,7 +7,7 @@
 /* eslint-disable import/prefer-default-export */
 import slug from 'slug';
 import { createClient } from 'redis';
-import moment, { Moment } from 'moment';
+import moment, { Moment, unitOfTime } from 'moment';
 import get from 'lodash/get';
 import { checkJSon } from '../../common/function';
 import { DurationTime } from '../dagora/dagoraHistory';
@@ -63,7 +63,7 @@ export const saveStorage = (key: string, value: any) => {
   clientRedis.set(key, newValue);
 };
 
-export const getQueryTimeArray = (from: any, to: any, type: any) => {
+export const getQueryTimeArray = (from: number, to: number, type: unitOfTime.StartOf) => {
   const getListTimeArray = (startTime: any, endTime: any, typeTime: any) => {
     const listTime: DurationTime[] = [];
     for (let i = startTime; i < endTime; i.add(1, typeTime)) {
@@ -72,8 +72,8 @@ export const getQueryTimeArray = (from: any, to: any, type: any) => {
     }
     return listTime;
   };
-  let startDate = moment(parseInt(from)).startOf(type);
-  let endDate = moment(parseInt(to)).endOf(type);
+  let startDate = moment(from).startOf(type);
+  let endDate = moment(to).endOf(type);
   if (type === 'week') {
     startDate = startDate.add(1, 'day');
     endDate = endDate.add(1, 'day');
