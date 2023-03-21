@@ -25,9 +25,11 @@ router.use('/app/wallet/chart/detail/get', analyticSupperApp_1.default.getWallet
 router.use('/app/wallet/chart/detail/cache', analyticSupperApp_1.default.cacheWalletCreateNewAndRestore);
 router.use('/app/wallet/chart/transaction', analyticSupperApp_1.default.getDetailTransaction);
 // swap
-router.use('/app/swap', analyticSupperApp_1.default.getSwapDashboard);
+router.use('/app/swap/get', analyticSupperApp_1.default.getSwapDashboard);
+router.use('/app/swap/cache', analyticSupperApp_1.default.cacheSwapDashboard);
 router.use('/app/swap/chart', analyticSupperApp_1.default.getSwapChart);
-router.use('/app/swap/top', analyticSupperApp_1.default.getTopTokenSwap);
+router.use('/app/swap/top/get', analyticSupperApp_1.default.getTopTokenSwap);
+router.use('/app/swap/top/cache', analyticSupperApp_1.default.cacheTopTokenSwap);
 // update dashboardData
 router.use('/app/update', analyticSupperApp_1.default.updateDashboardData);
 exports.default = router;
