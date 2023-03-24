@@ -18,7 +18,7 @@ const DashboardData_1 = __importDefault(require("../../model/dashboardData/Dashb
 const User_1 = __importDefault(require("../../model/user/User"));
 const KYCVerify_1 = __importDefault(require("../../model/user/KYCVerify"));
 const IPUser_1 = __importDefault(require("../../model/user/IPUser"));
-const RecordCacheData_1 = __importDefault(require("../../model/system/RecordCacheData"));
+const CacheData_1 = __importDefault(require("../../model/system/CacheData"));
 const DeviceSource_1 = __importDefault(require("../../model/DeviceSource/DeviceSource"));
 const index_1 = require("../function/index");
 const AddressList_1 = __importDefault(require("../../model/addressList/AddressList"));
@@ -92,18 +92,18 @@ class AnalyticSupperAppWorker {
                 totalAddressSummary: ((_b = dashboardData14days[0]) === null || _b === void 0 ? void 0 : _b.addressTotal) || 0,
                 XPoint: ((_c = dashboardData14days[0]) === null || _c === void 0 ? void 0 : _c.pointTotal) || 0,
             };
-            const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: 'dashboard-data' });
+            const cacheDataDashBoard = yield CacheData_1.default.findOne({ id: 'dashboard-data' });
             if (!cacheDataDashBoard) {
-                yield RecordCacheData_1.default.create({
+                yield CacheData_1.default.create({
                     id: 'dashboard-data',
                     time: new Date().getTime(),
-                    data,
+                    object: data,
                 });
             }
             else {
                 yield cacheDataDashBoard.updateOne({
                     time: new Date().getTime(),
-                    data,
+                    object: data,
                 });
             }
             req.response = true;
@@ -186,12 +186,12 @@ class AnalyticSupperAppWorker {
                     newUser: totalUser - kycUser,
                     kycUser,
                 };
-                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `total-user-data-${type}` });
+                const cacheDataDashBoard = yield CacheData_1.default.findOne({ id: `total-user-data-${type}` });
                 if (!cacheDataDashBoard) {
-                    yield RecordCacheData_1.default.create({
+                    yield CacheData_1.default.create({
                         id: `total-user-data-${type}`,
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
                 else {
@@ -255,18 +255,18 @@ class AnalyticSupperAppWorker {
                     ios: getTotalData(item.start, item.end, 'ios'),
                     android: getTotalData(item.start, item.end, 'android'),
                 }));
-                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `devices-data-${type}` });
+                const cacheDataDashBoard = yield CacheData_1.default.findOne({ id: `devices-data-${type}` });
                 if (!cacheDataDashBoard) {
-                    yield RecordCacheData_1.default.create({
+                    yield CacheData_1.default.create({
                         id: `devices-data-${type}`,
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
                 else {
                     yield cacheDataDashBoard.updateOne({
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
             })));
@@ -307,18 +307,18 @@ class AnalyticSupperAppWorker {
                 ]);
                 const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
                 const data = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
-                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `popular-countries-data-${type}` });
+                const cacheDataDashBoard = yield CacheData_1.default.findOne({ id: `popular-countries-data-${type}` });
                 if (!cacheDataDashBoard) {
-                    yield RecordCacheData_1.default.create({
+                    yield CacheData_1.default.create({
                         id: `popular-countries-data-${type}`,
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
                 else {
                     yield cacheDataDashBoard.updateOne({
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
             })));
@@ -384,18 +384,18 @@ class AnalyticSupperAppWorker {
                 totalTransferVolume: dashboardData14days.length ? dashboardData14days[0].transactionVolumeTotal : 0,
                 totalTransferTransaction: dashboardData14days.length ? dashboardData14days[0].transactionCountTotal : 0,
             };
-            const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: 'wallet-data' });
+            const cacheDataDashBoard = yield CacheData_1.default.findOne({ id: 'wallet-data' });
             if (!cacheDataDashBoard) {
-                yield RecordCacheData_1.default.create({
+                yield CacheData_1.default.create({
                     id: 'wallet-data',
                     time: new Date().getTime(),
-                    data,
+                    object: data,
                 });
             }
             else {
                 yield cacheDataDashBoard.updateOne({
                     time: new Date().getTime(),
-                    data,
+                    object: data,
                 });
             }
             req.response = true;
@@ -437,6 +437,10 @@ class AnalyticSupperAppWorker {
                     break;
                 default:
                     break;
+            }
+            if (!dataResponse) {
+                req.response = { errMess: `notFondChart:${chart}` };
+                return next();
             }
             const dashboardData = yield DashboardData_1.default.find({
                 interval,
@@ -513,18 +517,18 @@ class AnalyticSupperAppWorker {
                         singleChainDetail: restoreSingleChainDetail.map((item) => ({ chain: item._id, percent: restoreSingleChainTotal ? (item.total / restoreSingleChainTotal) * 100 : 0 })),
                     },
                 };
-                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `wallet-create-restore-data-${type}` });
+                const cacheDataDashBoard = yield CacheData_1.default.findOne({ id: `wallet-create-restore-data-${type}` });
                 if (!cacheDataDashBoard) {
-                    yield RecordCacheData_1.default.create({
+                    yield CacheData_1.default.create({
                         id: `wallet-create-restore-data-${type}`,
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
                 else {
                     yield cacheDataDashBoard.updateOne({
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
             })));
@@ -707,18 +711,18 @@ class AnalyticSupperAppWorker {
                     swapVolume: ((_a = dashboardData14days[0]) === null || _a === void 0 ? void 0 : _a.swapVolumeTotal) || 0,
                     swapTransaction: ((_b = dashboardData14days[0]) === null || _b === void 0 ? void 0 : _b.swapCountTotal) || 0,
                 };
-                const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `total-swap-data-${chain}` });
+                const cacheDataDashBoard = yield CacheData_1.default.findOne({ id: `total-swap-data-${chain}` });
                 if (!cacheDataDashBoard) {
-                    yield RecordCacheData_1.default.create({
+                    yield CacheData_1.default.create({
                         id: `total-swap-data-${chain}`,
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
                 else {
                     yield cacheDataDashBoard.updateOne({
                         time: new Date().getTime(),
-                        data,
+                        object: data,
                     });
                 }
             })));
@@ -754,6 +758,10 @@ class AnalyticSupperAppWorker {
                     break;
                 default:
                     break;
+            }
+            if (!dataResponse) {
+                req.response = { errMess: `notFondChart:${chart}` };
+                return next();
             }
             const dashboardData = yield DashboardData_1.default.find({
                 interval,
@@ -823,18 +831,18 @@ class AnalyticSupperAppWorker {
                         const dataToken1 = aggregatorHistoryDataToken1.find((it) => it._id.symbol === item);
                         return { symbol: item, volume: ((dataToken0 === null || dataToken0 === void 0 ? void 0 : dataToken0.volume) || 0) + ((dataToken1 === null || dataToken1 === void 0 ? void 0 : dataToken1.volume) || 0) };
                     }).sort((a, b) => b.volume - a.volume).slice(0, 5);
-                    const cacheDataDashBoard = yield RecordCacheData_1.default.findOne({ id: `top-token-swap-data-${chain}-${type}` });
+                    const cacheDataDashBoard = yield CacheData_1.default.findOne({ id: `top-token-swap-data-${chain}-${type}` });
                     if (!cacheDataDashBoard) {
-                        yield RecordCacheData_1.default.create({
+                        yield CacheData_1.default.create({
                             id: `top-token-swap-data-${chain}-${type}`,
                             time: new Date().getTime(),
-                            data,
+                            object: data,
                         });
                     }
                     else {
                         yield cacheDataDashBoard.updateOne({
                             time: new Date().getTime(),
-                            data,
+                            object: data,
                         });
                     }
                 })));
@@ -967,11 +975,11 @@ class AnalyticSupperAppWorker {
     // get records cache data
     static getRecordCacheData(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const recordDashboardData = yield RecordCacheData_1.default.findOne({ id }, { _id: 0, data: 1 }).lean();
+            const recordDashboardData = yield CacheData_1.default.findOne({ id }, { _id: 0, object: 1 }).lean();
             if (!recordDashboardData) {
                 return { errMess: `documentNotFoundWithId:${id}` };
             }
-            return recordDashboardData.data;
+            return recordDashboardData.object;
         });
     }
 }

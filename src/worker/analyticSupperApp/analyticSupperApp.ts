@@ -8,7 +8,7 @@ import DashboardData, { DashboardFiledResponse, DashboardInterface } from '../..
 import User from '../../model/user/User';
 import KYCVerify from '../../model/user/KYCVerify';
 import IPUser from '../../model/user/IPUser';
-import RecordCacheData, { RecordCacheDataInterface } from '../../model/system/RecordCacheData';
+import CacheData, { CacheDataInterface } from '../../model/system/CacheData';
 import DeviceSource, { DeviceSourceInterface } from '../../model/DeviceSource/DeviceSource';
 import {
   getQueryTimeArray, getQueryChart,
@@ -87,17 +87,17 @@ export default class AnalyticSupperAppWorker {
       XPoint: dashboardData14days[0]?.pointTotal || 0,
     };
 
-    const cacheDataDashBoard = await RecordCacheData.findOne({ id: 'dashboard-data' });
+    const cacheDataDashBoard = await CacheData.findOne({ id: 'dashboard-data' });
     if (!cacheDataDashBoard) {
-      await RecordCacheData.create({
+      await CacheData.create({
         id: 'dashboard-data',
         time: new Date().getTime(),
-        data,
+        object: data,
       });
     } else {
       await cacheDataDashBoard.updateOne({
         time: new Date().getTime(),
-        data,
+        object: data,
       });
     }
 
@@ -188,12 +188,12 @@ export default class AnalyticSupperAppWorker {
         kycUser,
       };
 
-      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `total-user-data-${type}` });
+      const cacheDataDashBoard = await CacheData.findOne({ id: `total-user-data-${type}` });
       if (!cacheDataDashBoard) {
-        await RecordCacheData.create({
+        await CacheData.create({
           id: `total-user-data-${type}`,
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       } else {
         await cacheDataDashBoard.updateOne({
@@ -267,17 +267,17 @@ export default class AnalyticSupperAppWorker {
         android: getTotalData(item.start, item.end, 'android'),
       }));
 
-      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `devices-data-${type}` });
+      const cacheDataDashBoard = await CacheData.findOne({ id: `devices-data-${type}` });
       if (!cacheDataDashBoard) {
-        await RecordCacheData.create({
+        await CacheData.create({
           id: `devices-data-${type}`,
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       } else {
         await cacheDataDashBoard.updateOne({
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       }
     }));
@@ -319,17 +319,17 @@ export default class AnalyticSupperAppWorker {
       const dataTotalCount = dataCountries.reduce((totalCount, country) => totalCount + country.total, 0);
       const data = dataCountries.map((item) => ({ country: item._id, percent: dataTotalCount ? (item.total / dataTotalCount) * 100 : 0 }));
 
-      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `popular-countries-data-${type}` });
+      const cacheDataDashBoard = await CacheData.findOne({ id: `popular-countries-data-${type}` });
       if (!cacheDataDashBoard) {
-        await RecordCacheData.create({
+        await CacheData.create({
           id: `popular-countries-data-${type}`,
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       } else {
         await cacheDataDashBoard.updateOne({
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       }
     }));
@@ -401,17 +401,17 @@ export default class AnalyticSupperAppWorker {
       totalTransferTransaction: dashboardData14days.length ? dashboardData14days[0].transactionCountTotal : 0,
     };
 
-    const cacheDataDashBoard = await RecordCacheData.findOne({ id: 'wallet-data' });
+    const cacheDataDashBoard = await CacheData.findOne({ id: 'wallet-data' });
     if (!cacheDataDashBoard) {
-      await RecordCacheData.create({
+      await CacheData.create({
         id: 'wallet-data',
         time: new Date().getTime(),
-        data,
+        object: data,
       });
     } else {
       await cacheDataDashBoard.updateOne({
         time: new Date().getTime(),
-        data,
+        object: data,
       });
     }
 
@@ -542,17 +542,17 @@ export default class AnalyticSupperAppWorker {
         },
       };
 
-      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `wallet-create-restore-data-${type}` });
+      const cacheDataDashBoard = await CacheData.findOne({ id: `wallet-create-restore-data-${type}` });
       if (!cacheDataDashBoard) {
-        await RecordCacheData.create({
+        await CacheData.create({
           id: `wallet-create-restore-data-${type}`,
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       } else {
         await cacheDataDashBoard.updateOne({
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       }
     }));
@@ -748,17 +748,17 @@ export default class AnalyticSupperAppWorker {
         swapTransaction: dashboardData14days[0]?.swapCountTotal || 0,
       };
 
-      const cacheDataDashBoard = await RecordCacheData.findOne({ id: `total-swap-data-${chain}` });
+      const cacheDataDashBoard = await CacheData.findOne({ id: `total-swap-data-${chain}` });
       if (!cacheDataDashBoard) {
-        await RecordCacheData.create({
+        await CacheData.create({
           id: `total-swap-data-${chain}`,
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       } else {
         await cacheDataDashBoard.updateOne({
           time: new Date().getTime(),
-          data,
+          object: data,
         });
       }
     }));
@@ -874,17 +874,17 @@ export default class AnalyticSupperAppWorker {
           return { symbol: item, volume: (dataToken0?.volume || 0) + (dataToken1?.volume || 0) };
         }).sort((a, b) => b.volume - a.volume).slice(0, 5);
 
-        const cacheDataDashBoard = await RecordCacheData.findOne({ id: `top-token-swap-data-${chain}-${type}` });
+        const cacheDataDashBoard = await CacheData.findOne({ id: `top-token-swap-data-${chain}-${type}` });
         if (!cacheDataDashBoard) {
-          await RecordCacheData.create({
+          await CacheData.create({
             id: `top-token-swap-data-${chain}-${type}`,
             time: new Date().getTime(),
-            data,
+            object: data,
           });
         } else {
           await cacheDataDashBoard.updateOne({
             time: new Date().getTime(),
-            data,
+            object: data,
           });
         }
       }));
@@ -1024,10 +1024,10 @@ export default class AnalyticSupperAppWorker {
 
   // get records cache data
   static async getRecordCacheData(id: string) {
-    const recordDashboardData: RecordCacheDataInterface = await RecordCacheData.findOne({ id }, { _id: 0, data: 1 }).lean();
+    const recordDashboardData: CacheDataInterface = await CacheData.findOne({ id }, { _id: 0, object: 1 }).lean();
     if (!recordDashboardData) {
       return { errMess: `documentNotFoundWithId:${id}` };
     }
-    return recordDashboardData.data;
+    return recordDashboardData.object;
   }
 }

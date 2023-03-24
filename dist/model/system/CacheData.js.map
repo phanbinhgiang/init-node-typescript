@@ -1,0 +1,1 @@
+{"version":3,"file":"CacheData.js","sourceRoot":"","sources":["../../../src/model/system/CacheData.ts"],"names":[],"mappings":";;AAAA,0BAAgD;AAEhD,kBAAe,IAAA,gBAAY,EAAC;IAC1B,IAAI,EAAE,gBAAY,CAAC,MAAM;IACzB,EAAE,EAAE,gBAAY,CAAC,YAAY;IAC7B,IAAI,EAAE,gBAAY,CAAC,MAAM;IACzB,KAAK,EAAE,gBAAY,CAAC,KAAK;IACzB,MAAM,EAAE,gBAAY,CAAC,MAAM;CAC5B,EAAE,WAAW,EAAE,IAAI,EAAE,IAAI,CAAC,CAAC"}
