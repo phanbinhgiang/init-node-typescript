@@ -1,0 +1,452 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Internal API Document for Starship",
+      "contact": {},
+      "version": "1.0"
+    },
+    "servers": [
+      {
+        "url": "https://internal.c98staging.dev/adapters",
+        "variables": {}
+      },
+      {
+        "url": "http://localhost:3031/adapters",
+        "variables": {}
+      }
+    ],
+    "paths": {
+      "/private/authen": {
+        "post": {
+          "tags": [
+            "Authentication"
+          ],
+          "summary": "Get authorization token for admin Account",
+          "operationId": "Get authorization token for admin Account",
+          "requestBody": {
+            "description": "Get token Authen for Account",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "example@coin98.finance"
+                    },
+                    "password": {
+                      "type": "string",
+                      "example": "password"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "",
+              "headers": {}
+            }
+          },
+          "deprecated": false
+        }
+      },
+      "/private/onchain": {
+        "post": {
+          "tags": [
+            "Authentication"
+          ],
+          "summary": "Get Authorization token in OnchainSignature for Address by PrivateKey and Chain",
+          "operationId": "Get Onchain signature for Address",
+          "requestBody": {
+            "description": "Get token Authen for Account",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "privateKey": {
+                      "type": "string",
+                      "example": "privateKey String"
+                    },
+                    "chain": {
+                      "type": "string",
+                      "example": "Chain name"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "",
+              "headers": {}
+            }
+          },
+          "deprecated": false
+        }
+      },
+      "/dagora/activity": {
+        "post": {
+          "tags": [
+            "Listing NFT"
+          ],
+          "summary": "Create listing request for nft in DAgora",
+          "operationId": "create Activity ",
+          "parameters": [
+            {
+              "name": "onChainSignature",
+              "in": "header",
+              "description": "Authen Token to verified Address",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "requestBody": {
+            "description": "Data for listing NFT request in DAgora",
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "example": "1234"
+                    },
+                    "chain": {
+                      "type": "string",
+                      "example": "matic"
+                    },
+                    "id": {
+                      "type": "string",
+                      "example": "matic"
+                    },
+                    "signature": {
+                      "type": "string",
+                      "example": "signature"
+                    },
+                    "signMessage": {
+                      "type": "string",
+                      "example": "signMessage"
+                    },
+                    "time": {
+                      "type": "number",
+                      "example": 123
+                    },
+                    "duration": {
+                      "type": "number",
+                      "example": 123
+                    },
+                    "amountUSD": {
+                      "type": "number",
+                      "example": 123
+                    },
+                    "tokens": {
+                      "type": "array",
+                      "example": [
+                        "tokenAddress"
+                      ]
+                    },
+                    "amount": {
+                      "type": "string",
+                      "example": "100000"
+                    },
+                    "tokenAddress": {
+                      "type": "string",
+                      "example": "tokenAddress"
+                    },
+                    "nonce": {
+                      "type": "string",
+                      "example": "10"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "",
+              "headers": {}
+            }
+          },
+          "deprecated": false
+        }
+      },
+      "/explore": {
+        "get": {
+          "tags": [
+            "Starship"
+          ],
+          "summary": "Get List StarshipPad filtered by name, description",
+          "operationId": "Get List StarshipPad filtered by name, description",
+          "parameters": [
+            {  
+              "name":"key",
+              "in":"query",
+              "description":"Keyword name or keyword description of List StarShipPad filter (example key = abc)",
+              "required":false,
+              "type":"string"
+            },
+            {  
+              "name":"page",
+              "in":"query",
+              "description":"Page number of List StarShipPad filter returns (default page = 1)",
+              "required":false,
+              "type":"number"
+            },
+            {  
+              "name":"size",
+              "in":"query",
+              "description":"Size of page of List StarShipPad filter returns (default size = 10)",
+              "required":false,
+              "type":"number"
+            },
+            {  
+              "name":"sort",
+              "in":"query",
+              "description":"Sort by time ( newest: sort = -1, oldest: sort = 1)",
+              "required":false,
+              "type":"number"
+            }
+
+          ],
+          "responses": {
+            "200": {
+              "description": "",
+              "headers": {}
+            }
+          },
+          "deprecated": false
+        }      
+      },
+      "/detail/{id}": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "Slug of StarshipPad"
+          }
+        ],
+        "get": {
+          "tags": [
+            "Starship"
+          ],
+          "summary": "Get StarshipPad By Slug",
+          "operationId": "Get StarshipPad By Slug",
+          "parameters": [],
+          "responses": {
+            "200": {
+              "description": "",
+              "headers": {}
+            }
+          },
+          "deprecated": false
+        }
+      },
+      "/register/signature": {
+        "get": {
+          "tags": [
+            "Starship"
+          ],
+          "summary": "Register Signature",
+          "operationId": "Register Signature",
+          "parameters": [
+            {  
+              "name": "slug",
+              "in": "query",
+              "description": "Value slug of StarShipPad",
+              "required": true,
+              "type": "string"
+            },
+            {  
+              "name": "chain",
+              "in": "query",
+              "description": "Name of chain",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "",
+              "headers": {}
+            }
+          },
+          "deprecated": false
+        }      
+      },
+      "/register": {
+        "post": {
+          "tags": [
+            "Starship"
+          ],
+          "summary": "Create StartShip Participant",
+          "operationId": "Create StartShip Participant",
+          "parameters": [
+            {  
+            "name":"address",
+            "in":"header",
+            "description":"Contract Address",
+            "required":true,
+            "type":"string"
+            }
+          ],
+          "requestBody": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateStartShipParticipantDocumentRequest"
+                },
+                "example": {
+                  "chain": "name",
+                  "id": "slugStarshipPad",
+                  "hash": "transactionHash"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "",
+              "headers": {}
+            }
+          },
+          "deprecated": false
+        }
+      },
+      "/log": {
+        "post": {
+          "tags": [
+            "Starship"
+          ],
+          "summary": "update StartShip Participant",
+          "operationId": "update StartShip Participant",
+          "parameters": [
+            {  
+              "name":"address",
+              "in":"header",
+              "description":"Contract Address",
+              "required":true,
+              "type":"string"
+            }
+          ],
+          "requestBody": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateStartShipParticipantDocumentRequest"
+                },
+                "example": {
+                  "chain": "name",
+                  "id": "id",
+                  "hash": "hash",
+                  "type": "sellORclaim",
+                  "amount": 10
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "",
+              "headers": {}
+            }
+          },
+          "deprecated": false
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "CreateStartShipParticipantDocumentRequest": {
+          "title": "CreateStartShipParticipantDocumentRequest",
+          "required": [
+            "chain",
+            "id",
+            "hash"
+          ],
+          "type": "object",
+          "properties": {
+            "chain": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "hash": {
+              "type": "string"
+            },
+          "example": {}
+        } 
+      },
+      "UpdateStartShipParticipantDocumentRequest": {
+        "title": "UpdateStartShipParticipantDocumentRequest",
+        "required": [
+          "chain",
+          "id",
+          "hash",
+          "type",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+        "example": {}
+      } 
+    },
+      "securitySchemes": {
+        "httpBearer": {
+          "type": "http",
+          "scheme": "bearer"
+        }
+      }
+    },
+    "security": [
+      {
+        "httpBearer": ""
+      }
+    ],
+    "tags": [
+      {
+        "name": "Authentication",
+        "description": "API to get Authentication token for api in DAgora"
+      },
+      {
+        "name": "Listing NFT",
+        "description": "API for Listing NFT in DAgora marketplace"
+      },
+      {
+        "name": "Starship",
+        "description": "API for get, create, update Starship for user"
+      }
+    ]
+  }
+}

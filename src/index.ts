@@ -4,12 +4,12 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import swaggerUI from 'swagger-ui-express';
+// import swaggerUI from 'swagger-ui-express';
 
 import router from './route/index';
 import { connectDatabase } from './common/connectDB';
 import { mess500 } from './middleware/constants';
-import swaggerDocument from './swagger.json';
+// import swaggerDocument from './swagger.json';
 
 dotenv.config();
 const app = express();
@@ -48,7 +48,7 @@ const pretty = (req, res) => {
   return res.status(message.status).send(message);
 };
 
-app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+// app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 app.use('/adapters', router, pretty);
 

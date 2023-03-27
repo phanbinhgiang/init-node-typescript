@@ -3,7 +3,7 @@ import Web3 from 'web3';
 import { CHAIN_DATA } from '../../common/constants';
 
 export default class EVMServices {
-  static async getTxsByHash(chain, hash) {
+  static async getTxsByHashRequest(chain, hash) {
     try {
       const web3EVM = EVMServices.genWeb3(chain);
       return await web3EVM.eth.getTransaction(hash);

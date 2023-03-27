@@ -16,7 +16,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const web3_1 = __importDefault(require("web3"));
 const constants_1 = require("../../common/constants");
 class EVMServices {
-    static getTxsByHash(chain, hash) {
+    static getTxsByHashRequest(chain, hash) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const web3EVM = EVMServices.genWeb3(chain);
