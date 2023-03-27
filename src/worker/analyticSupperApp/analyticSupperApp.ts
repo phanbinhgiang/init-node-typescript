@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 /* eslint-disable consistent-return */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable max-len */
@@ -19,6 +20,7 @@ import DagoraHistory from '../../model/dagora/dagoraHistory';
 import AggregatorHistory from '../../model/aggregatorHistory/AggregatorHistory';
 import { getDataDashBoard } from '../function';
 import { DurationTime } from '../dagora/dagoraHistory';
+import { data7daysInterface, matchTimeInterface } from '../../common/constants';
 
 export const TIME_CHARTS = ['day', 'week', 'month', 'all'];
 export const CHAIN_ARRAY = [
@@ -233,17 +235,8 @@ export default class AnalyticSupperAppWorker {
           break;
 
         case 'all':
-          from = moment((await DeviceSource.aggregate(
-            [
-              {
-                $group:
-                {
-                  _id: null,
-                  minTime: { $min: '$createdAt' },
-                },
-              },
-            ],
-          ))[0].minTime);
+          const findOldestDeviceSource: DeviceSourceInterface = await DeviceSource.findOne({}, { createdAt: 1 }).sort({ createdAt: 1 });
+          from = findOldestDeviceSource?.createdAt ? moment(findOldestDeviceSource?.createdAt) : moment(time).subtract(1, 'month');
           arrQueryTime = getQueryTimeArray(from.valueOf(), to.valueOf(), 'month');
           break;
 
@@ -633,41 +626,24 @@ export default class AnalyticSupperAppWorker {
         startAt: 1,
       }).sort({ startAt: -1 }).lean();
 
-      let matchQuery;
-      if (chain === 'all') {
-        matchQuery = {
-          data7days: {
-            createdAt: {
-              $gte: new Date(moment(time).subtract(14, 'day').valueOf()),
-              $lt: new Date(moment(time).subtract(7, 'day').valueOf()),
-            },
+      const matchQuery: data7daysInterface = {
+        data7days: {
+          createdAt: {
+            $gte: new Date(moment(time).subtract(7, 'day').valueOf()),
+            $lt: new Date(moment(time).valueOf()),
           },
+        },
 
-          data7daysBefore: {
-            createdAt: {
-              $gte: new Date(moment(time).subtract(14, 'day').valueOf()),
-              $lt: new Date(moment(time).subtract(7, 'day').valueOf()),
-            },
+        data7daysBefore: {
+          createdAt: {
+            $gt: new Date(moment(time).subtract(14, 'day').valueOf()),
+            $lte: new Date(moment(time).subtract(7, 'day').valueOf()),
           },
-        };
-      } else {
-        matchQuery = {
-          data7days: {
-            createdAt: {
-              $gte: new Date(moment(time).subtract(14, 'day').valueOf()),
-              $lt: new Date(moment(time).subtract(7, 'day').valueOf()),
-            },
-            chain,
-          },
-
-          data7daysBefore: {
-            createdAt: {
-              $gte: new Date(moment(time).subtract(14, 'day').valueOf()),
-              $lt: new Date(moment(time).subtract(7, 'day').valueOf()),
-            },
-            chain,
-          },
-        };
+        },
+      };
+      if (chain !== 'all') {
+        matchQuery.data7days.chain = chain;
+        matchQuery.data7daysBefore.chain = chain;
       }
 
       const swapUserData7daysPromise = AggregatorHistory.aggregate([
@@ -825,17 +801,13 @@ export default class AnalyticSupperAppWorker {
       await Promise.all(CHAIN_ARRAY.map(async (chain) => {
         const time = new Date().getTime();
         const { matchTime } = getQueryChart(type, time);
-        let match;
-        if (chain === 'all') {
-          match = {
-            createdAt: matchTime,
-          };
-        } else {
-          match = {
-            createdAt: matchTime,
-            chain,
-          };
+        const match: matchTimeInterface = {
+          createdAt: matchTime,
+        };
+        if (chain !== 'all') {
+          match.chain = chain;
         }
+
         const aggregatorHistoryDataToken0 = await AggregatorHistory.aggregate([
           {
             $match: match,

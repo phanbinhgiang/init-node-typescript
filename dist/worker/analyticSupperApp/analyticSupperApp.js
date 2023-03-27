@@ -231,14 +231,8 @@ class AnalyticSupperAppWorker {
                         arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'day').slice(1);
                         break;
                     case 'all':
-                        from = (0, moment_1.default)((yield DeviceSource_1.default.aggregate([
-                            {
-                                $group: {
-                                    _id: null,
-                                    minTime: { $min: '$createdAt' },
-                                },
-                            },
-                        ]))[0].minTime);
+                        const findOldestDeviceSource = yield DeviceSource_1.default.findOne({}, { createdAt: 1 }).sort({ createdAt: 1 });
+                        from = (findOldestDeviceSource === null || findOldestDeviceSource === void 0 ? void 0 : findOldestDeviceSource.createdAt) ? (0, moment_1.default)(findOldestDeviceSource === null || findOldestDeviceSource === void 0 ? void 0 : findOldestDeviceSource.createdAt) : (0, moment_1.default)(time).subtract(1, 'month');
                         arrQueryTime = (0, index_1.getQueryTimeArray)(from.valueOf(), to.valueOf(), 'month');
                         break;
                     default:
@@ -609,40 +603,23 @@ class AnalyticSupperAppWorker {
                     swapCountSummary: 1,
                     startAt: 1,
                 }).sort({ startAt: -1 }).lean();
-                let matchQuery;
-                if (chain === 'all') {
-                    matchQuery = {
-                        data7days: {
-                            createdAt: {
-                                $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
-                                $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
-                            },
+                const matchQuery = {
+                    data7days: {
+                        createdAt: {
+                            $gte: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
+                            $lt: new Date((0, moment_1.default)(time).valueOf()),
                         },
-                        data7daysBefore: {
-                            createdAt: {
-                                $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
-                                $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
-                            },
+                    },
+                    data7daysBefore: {
+                        createdAt: {
+                            $gt: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
+                            $lte: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
                         },
-                    };
-                }
-                else {
-                    matchQuery = {
-                        data7days: {
-                            createdAt: {
-                                $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
-                                $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
-                            },
-                            chain,
-                        },
-                        data7daysBefore: {
-                            createdAt: {
-                                $gte: new Date((0, moment_1.default)(time).subtract(14, 'day').valueOf()),
-                                $lt: new Date((0, moment_1.default)(time).subtract(7, 'day').valueOf()),
-                            },
-                            chain,
-                        },
-                    };
+                    },
+                };
+                if (chain !== 'all') {
+                    matchQuery.data7days.chain = chain;
+                    matchQuery.data7daysBefore.chain = chain;
                 }
                 const swapUserData7daysPromise = AggregatorHistory_1.default.aggregate([
                     {

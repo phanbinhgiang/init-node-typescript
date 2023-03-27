@@ -1693,3 +1693,25 @@ export const CHAIN_DATA = {
     scanAddressPrefix: 'account',
   },
 };
+export interface data7daysInterface {
+  data7days: {
+    createdAt: {
+      $gte: Date,
+      $lt: Date,
+    },
+    chain?: string,
+  },
+
+  data7daysBefore: {
+    createdAt: {
+      $gt: Date,
+      $lte: Date,
+    },
+    chain?: string,
+  },
+}
+
+export interface matchTimeInterface {
+  createdAt: any,
+  chain?: string
+}

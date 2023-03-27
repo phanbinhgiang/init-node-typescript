@@ -271,7 +271,7 @@
             {  
               "name": "chain",
               "in": "query",
-              "description": "Name of chain",
+              "description": "chain name",
               "required": true,
               "type": "string"
             }
@@ -445,7 +445,7 @@
       },
       {
         "name": "Starship",
-        "description": "API for get, create, update Starship for user"
+        "description": "API for get, create, update Starship for User"
       }
     ]
   }

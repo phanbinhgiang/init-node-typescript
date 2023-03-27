@@ -12,12 +12,13 @@ export default createSchema({
 }, 'DeviceSource', null, null);
 
 export interface DeviceSourceInterface {
-  id: string,
-  createdUser: string[],
-  lastSync: Date,
-  numSync: number,
-  source: string,
-  os: string,
-  isActive: boolean,
-  createdAt: Date,
+  _id?: any,
+  id?: string,
+  createdUser?: string[],
+  lastSync?: Date,
+  numSync?: number,
+  source?: string,
+  os?: string,
+  isActive?: boolean,
+  createdAt?: Date,
 }
